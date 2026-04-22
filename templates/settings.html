@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% set page = 'settings' %}
+
+{% block title %}Trakr — Settings{% endblock %}
+
+{% block extra_css %}
+  .topnav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; color: var(--accent); }
+  .page-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--text); }
+
+  .settings-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+  .section-header { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+  .client-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; border-left: 3px solid transparent; }
+
+  .client-header { display: flex; align-items: center; gap: 10px; padding: 14px; cursor: pointer; }
+  .client-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .client-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; flex: 1; }
+  .client-handle { font-size: 10px; color: var(--muted); }
+  .expand-btn { font-size: 14px; color: var(--muted); }
+
+  .client-body { border-top: 1px solid var(--border); display: none; }
+  .client-body.open { display: block; }
+
+  .client-section { padding: 14px; border-bottom: 1px solid var(--border); }
+  .client-section:last-child { border-bottom: none; }
+  .client-section-title { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+
+  .form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
+  .form-group label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; }
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group input[type="date"] {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 11px;
+    padding: 7px 10px; outline: none; transition: border-color 0.15s;
+  }
+  .form-group input:focus { border-color: var(--accent); }
+  .form-group input[type="color"] { width: 40px; height: 34px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); cursor: pointer; }
+
+  .btn { display: inline-flex; align-items: center; gap: 4px; padding: 7px 13px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; border: none; transition: opacity 0.15s; }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: var(--accent); color: #0a0a0a; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-danger { background: rgba(255,68,68,0.15); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+  .period-info { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+  .period-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
+  .period-label { color: var(--muted); font-size: 9px; letter-spacing: 0.8px; text-transform: uppercase; }
+  .period-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--accent); }
+
+  .period-history { margin-top: 10px; }
+  .history-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 10px; color: var(--muted); }
+  .history-item:last-child { border-bottom: none; }
+  .history-badge { padding: 2px 7px; border-radius: 4px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .history-badge.completed { background: rgba(200,241,53,0.1); color: var(--accent); }
+  .history-badge.active { background: rgba(77,159,255,0.1); color: #4d9fff; }
+  .history-badge.overdue { background: rgba(255,68,68,0.1); color: #ff4444; }
+
+  .product-list-sm { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .product-item { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
+  .product-item-name { font-size: 11px; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .product-item-id { font-size: 9px; color: var(--muted); }
+
+  .add-client-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+
+  .no-clients-msg { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
+  .no-clients-msg h2 { font-family: 'Syne', sans-serif; color: var(--text); margin-bottom: 8px; }
+
+  @media (min-width: 768px) {
+    .topnav { display: none; }
+    .desktop-topbar { display: flex !important; align-items: center; padding: 18px 28px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .settings-body { padding: 24px 28px; max-width: 800px; }
+  }
+  .desktop-topbar { display: none; }
+{% endblock %}
+
+{% block content %}
+
+<div class="topnav">
+  <div class="logo">TRAKR</div>
+  <div class="page-title">Settings</div>
+  <div style="width:50px;"></div>
+</div>
+
+<div class="desktop-topbar">
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;letter-spacing:-0.3px;">Settings</div>
+</div>
+
+<div class="settings-body">
+
+  <!-- ── CLIENTS ── -->
+  <div>
+    <div class="section-header">Retainer Clients</div>
+
+    {% if not client_data %}
+    <div class="no-clients-msg">
+      <h2>No clients yet</h2>
+      <p>Add your first retainer client below to get started.</p>
+    </div>
+    {% endif %}
+
+    {% for cd in client_data %}
+    <div class="client-card" style="border-left-color:{{ cd.brand_color }};margin-bottom:10px;">
+
+      <!-- CLIENT HEADER -->
+      <div class="client-header" onclick="toggleClient({{ cd.id }})">
+        <div class="client-dot" style="background:{{ cd.brand_color }};"></div>
+        <div>
+          <div class="client-name">{{ cd.brand_name }}</div>
+          <div class="client-handle">{% if cd.tiktok_handle %}@{{ cd.tiktok_handle }}{% else %}no handle set{% endif %}</div>
+        </div>
+        <div class="expand-btn" id="arrow-{{ cd.id }}">▾</div>
+      </div>
+
+      <div class="client-body" id="client-body-{{ cd.id }}">
+
+        <!-- EDIT CLIENT -->
+        <div class="client-section">
+          <div class="client-section-title">Client Info</div>
+          <form method="POST" action="/settings/clients/{{ cd.id }}/update">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Brand Name</label>
+                <input type="text" name="brand_name" value="{{ cd.brand_name }}" required>
+              </div>
+              <div class="form-group">
+                <label>TikTok Handle</label>
+                <input type="text" name="tiktok_handle" value="{{ cd.tiktok_handle or '' }}" placeholder="@handle">
+              </div>
+            </div>
+            <div class="form-row" style="margin-top:8px;">
+              <div class="form-group" style="flex:0;">
+                <label>Color</label>
+                <input type="color" name="brand_color" value="{{ cd.brand_color }}">
+              </div>
+              <div class="form-group" style="max-width:100px;">
+                <label>Video Target</label>
+                <input type="number" name="post_target" value="{{ cd.post_target }}" min="1" max="200">
+              </div>
+              <div style="display:flex;align-items:flex-end;">
+                <button type="submit" class="btn btn-primary">Save</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- RETAINER PERIOD -->
+        <div class="client-section">
+          <div class="client-section-title">Retainer Period</div>
+
+          {% if cd.active_period %}
+          <div class="period-info">
+            <div class="period-info-row">
+              <span class="period-label">Current Period</span>
+              <span class="period-val">{{ cd.active_period.period_start | datefmt }} → {{ cd.active_period.period_end | datefmt }}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <form method="POST" action="/settings/periods/{{ cd.active_period.id }}/complete">
+              <button type="submit" class="btn btn-secondary">✓ Mark Complete</button>
+            </form>
+            <form method="POST" action="/settings/periods/{{ cd.id }}/start">
+              <input type="hidden" name="period_start" value="">
+              <button type="submit" class="btn btn-ghost" onclick="this.previousElementSibling.value=new Date().toISOString().split('T')[0]">↺ Start New Period</button>
+            </form>
+          </div>
+          {% else %}
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">No active period. Start one to track retainer progress.</div>
+          <form method="POST" action="/settings/periods/{{ cd.id }}/start" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+            <div class="form-group">
+              <label>Period Start Date</label>
+              <input type="date" name="period_start" value="{{ today }}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Start Period</button>
+          </form>
+          {% endif %}
+
+          {% if cd.period_history %}
+          <div class="period-history" style="margin-top:14px;">
+            <div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Period History</div>
+            {% for period in cd.period_history %}
+            <div class="history-item">
+              <span>{{ period.period_start | datefmt }} – {{ period.period_end | datefmt }}</span>
+              <span class="history-badge {{ period.status }}">{{ period.status }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- PRODUCTS -->
+        <div class="client-section">
+          <div class="client-section-title">Approved Products</div>
+
+          {% if cd.products %}
+          <div class="product-list-sm">
+            {% for product in cd.products %}
+            <div class="product-item">
+              <div>
+                <div class="product-item-name">{{ product.product_name or product.product_id }}</div>
+                <div class="product-item-id">ID: {{ product.product_id }}</div>
+              </div>
+              <form method="POST" action="/settings/products/{{ product.id }}/delete">
+                <button type="submit" class="btn btn-danger" style="padding:4px 8px;font-size:9px;">✕</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">No products added yet.</div>
+          {% endif %}
+
+          <form method="POST" action="/settings/products/add" style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+            <input type="hidden" name="client_id" value="{{ cd.id }}">
+            <div class="form-group">
+              <label>Product ID</label>
+              <input type="text" name="product_id" placeholder="paste TikTok product ID" required>
+            </div>
+            <button type="submit" class="btn btn-secondary">+ Add</button>
+          </form>
+        </div>
+
+        <!-- DELETE CLIENT -->
+        <div class="client-section" style="background:rgba(255,68,68,0.03);">
+          <div class="client-section-title" style="color:#ff4444;">Danger Zone</div>
+          <form method="POST" action="/settings/clients/{{ cd.id }}/delete"
+                onsubmit="return confirm('Delete {{ cd.brand_name }}? This removes all their videos and data.')">
+            <button type="submit" class="btn btn-danger">Delete Client</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ── ADD NEW CLIENT ── -->
+  <div class="add-client-card">
+    <div class="section-header">Add New Client</div>
+    <form method="POST" action="/settings/clients/add">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Brand Name</label>
+          <input type="text" name="brand_name" placeholder="e.g. Leefar" required>
+        </div>
+        <div class="form-group">
+          <label>TikTok Handle</label>
+          <input type="text" name="tiktok_handle" placeholder="@handle (optional)">
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:8px;">
+        <div class="form-group" style="flex:0;">
+          <label>Color</label>
+          <input type="color" name="brand_color" value="#c8f135">
+        </div>
+        <div class="form-group" style="max-width:100px;">
+          <label>Video Target</label>
+          <input type="number" name="post_target" value="30" min="1" max="200">
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button type="submit" class="btn btn-primary">+ Add Client</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const today = new Date().toISOString().split('T')[0];
+
+  function toggleClient(id) {
+    const body = document.getElementById('client-body-' + id);
+    const arrow = document.getElementById('arrow-' + id);
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    arrow.textContent = isOpen ? '▾' : '▴';
+  }
+
+  // Auto-open if only one client
+  const cards = document.querySelectorAll('.client-body');
+  if (cards.length === 1) {
+    const id = cards[0].id.replace('client-body-', '');
+    toggleClient(id);
+  }
+</script>
+{% endblock %}

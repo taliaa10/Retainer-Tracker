@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% set page = 'products' %}
+
+{% block title %}Trakr — Products{% endblock %}
+
+{% block extra_css %}
+  .topnav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; color: var(--accent); }
+  .page-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--text); }
+
+  .stats-scroll { display: flex; gap: 10px; padding: 14px 16px; overflow-x: auto; scrollbar-width: none; }
+  .stats-scroll::-webkit-scrollbar { display: none; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; min-width: 120px; flex-shrink: 0; }
+  .stat-card.wide { min-width: 140px; }
+  .stat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -1px; color: var(--text); line-height: 1; }
+  .stat-value.green { color: var(--accent); }
+  .stat-delta { font-size: 9px; color: var(--accent); margin-top: 5px; }
+
+  .filter-bar { display: flex; align-items: center; gap: 8px; padding: 0 16px 14px; overflow-x: auto; scrollbar-width: none; }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip { display: flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 20px; font-size: 10px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
+  .filter-chip.active { color: var(--text); border-color: var(--muted); background: var(--surface2); }
+  .filter-chip.all.active { color: var(--accent); border-color: rgba(200,241,53,0.4); background: rgba(200,241,53,0.07); }
+  .filter-chip .cdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .sort-pill { margin-left: auto; flex-shrink: 0; padding: 5px 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: 10px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+
+  .product-list { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
+  .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; animation: fadeUp 0.3s ease both; border-left: 3px solid transparent; }
+  .product-top { display: flex; align-items: center; gap: 12px; padding: 13px 13px 10px; }
+  .product-img { width: 52px; height: 52px; border-radius: 8px; background: var(--muted2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .product-right { flex: 1; min-width: 0; }
+  .product-name-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .product-name { font-size: 12px; color: var(--text); line-height: 1.4; flex: 1; }
+  .product-gmv { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
+  .product-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .product-id { font-size: 9px; color: var(--muted); }
+  .brand-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 9px; letter-spacing: 0.3px; text-transform: uppercase; }
+
+  .product-metrics { display: flex; border-top: 1px solid var(--border); }
+  .metric-box { flex: 1; padding: 10px 12px; border-right: 1px solid var(--border); text-align: center; }
+  .metric-box:last-child { border-right: none; }
+  .metric-label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
+  .metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: -0.5px; color: var(--text); }
+  .metric-val.green { color: var(--accent); }
+  .metric-val.dim { color: var(--muted); }
+
+  .video-strip { display: flex; gap: 6px; padding: 10px 13px; border-top: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; align-items: center; }
+  .video-strip::-webkit-scrollbar { display: none; }
+  .strip-label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; }
+  .strip-thumb { width: 36px; height: 48px; border-radius: 5px; background: var(--muted2); flex-shrink: 0; overflow: hidden; position: relative; }
+  .strip-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .strip-views { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font-size: 7px; color: #fff; background: rgba(0,0,0,0.6); padding: 1px 2px; }
+  .strip-no-videos { font-size: 10px; color: var(--muted); font-style: italic; }
+
+  .dead-flag { display: flex; align-items: center; gap: 6px; padding: 8px 13px; border-top: 1px solid var(--border); font-size: 10px; color: var(--accent2); background: rgba(255,107,53,0.05); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
+
+  @media (min-width: 768px) {
+    .topnav { display: none; }
+    .desktop-topbar { display: flex !important; align-items: center; justify-content: space-between; padding: 18px 28px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .stats-scroll { padding: 16px 28px; }
+    .stat-card { min-width: 0; flex: 1; }
+    .filter-bar { padding: 0 28px 14px; }
+    .product-list { padding: 0 28px; }
+  }
+  .desktop-topbar { display: none; }
+{% endblock %}
+
+{% block content %}
+
+<div class="topnav">
+  <div class="logo">TRAKR</div>
+  <div class="page-title">Products</div>
+  <div style="width:50px"></div>
+</div>
+
+<div class="desktop-topbar">
+  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;letter-spacing:-0.3px;">Products</div>
+  <div style="font-size:10px;color:var(--muted);">All retainer clients</div>
+</div>
+
+<!-- STATS -->
+<div class="stats-scroll">
+  <div class="stat-card"><div class="stat-label">Total Products</div><div class="stat-value">{{ summary.total_products or 0 }}</div><div class="stat-delta">across all clients</div></div>
+  <div class="stat-card wide"><div class="stat-label">Total GMV</div><div class="stat-value green">{{ summary.total_gmv | gmv }}</div><div class="stat-delta">all products</div></div>
+  <div class="stat-card"><div class="stat-label">Tagged Videos</div><div class="stat-value">{{ summary.tagged_videos or 0 }}</div><div class="stat-delta">have a product</div></div>
+  <div class="stat-card"><div class="stat-label">Dead Products</div><div class="stat-value" style="color:var(--accent2)">{{ summary.dead_products or 0 }}</div><div class="stat-delta" style="color:var(--accent2)">0 videos tagged</div></div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <a href="/products" class="filter-chip all {% if not active_client_id %}active{% endif %}">All</a>
+  {% for c in clients %}
+  <a href="/products?client={{ c.id }}" class="filter-chip {% if active_client_id == c.id %}active{% endif %}">
+    <div class="cdot" style="background:{{ c.brand_color }}"></div>{{ c.brand_name }}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- PRODUCT CARDS -->
+<div class="product-list">
+  {% if products %}
+    {% for p in products %}
+    <div class="product-card" style="border-left-color:{{ p.brand_color }};animation-delay:{{ loop.index0 * 0.04 }}s;">
+      <div class="product-top">
+        <div class="product-img">📦</div>
+        <div class="product-right">
+          <div class="product-name-row">
+            <div class="product-name">{{ p.product_name or p.product_id }}</div>
+            <div class="product-gmv {% if not p.total_gmv %}" style="color:var(--muted){% endif %}">{{ p.total_gmv | gmv }}</div>
+          </div>
+          <div class="product-meta">
+            <div class="product-id">ID: {{ p.product_id }}</div>
+            <div class="brand-badge" style="background:{{ p.brand_color }}22;color:{{ p.brand_color }};">{{ p.brand_name }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-metrics">
+        <div class="metric-box"><div class="metric-label">Videos</div><div class="metric-val {% if not p.video_count %}dim{% endif %}">{{ p.video_count or 0 }}</div></div>
+        <div class="metric-box"><div class="metric-label">Orders</div><div class="metric-val {% if not p.total_orders %}dim{% endif %}">{{ p.total_orders or 0 }}</div></div>
+        <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val {% if not p.total_views %}dim{% endif %}">{{ p.total_views | num }}</div></div>
+        <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val {% if p.total_gmv %}green{% else %}dim{% endif %}">{{ p.total_gmv | gmv }}</div></div>
+      </div>
+
+      <div class="video-strip">
+        <div class="strip-label">Videos</div>
+        {% if p.video_strip %}
+          {% for vs in p.video_strip %}
+          <div class="strip-thumb">
+            {% if vs.cover_url %}<img src="{{ vs.cover_url }}" alt="">{% endif %}
+            <div class="strip-views">{{ vs.views | num }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="strip-no-videos">no videos tagged yet</div>
+        {% endif %}
+      </div>
+
+      {% if not p.video_count or p.video_count == 0 %}
+      <div class="dead-flag">⚠ No videos tagged this product — added but never used</div>
+      {% elif p.total_views and p.total_views > 500000 and (not p.total_gmv or p.total_gmv < 100) %}
+      <div class="dead-flag">⚠ {{ p.total_views | num }} views but low GMV — possible conversion issue</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    No products yet. Add them in <a href="/settings" style="color:var(--accent);">Settings</a>.
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

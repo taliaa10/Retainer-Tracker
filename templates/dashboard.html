@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+{% set page = 'dashboard' %}
+
+{% block title %}Trakr — Dashboard{% endblock %}
+
+{% block extra_css %}
+  /* ── TOP NAV ── */
+  .topnav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .menu-btn {
+    width: 34px; height: 34px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; cursor: pointer;
+  }
+
+  /* ── RETAINER PANEL ── */
+  .retainer-panel { margin: 14px 16px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .retainer-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  .retainer-panel-title { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .retainer-month { font-size: 10px; color: var(--muted); }
+
+  .retainer-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.15s; position: relative;
+  }
+  .retainer-row:last-child { border-bottom: none; }
+  .retainer-row:hover { background: var(--surface2); }
+  .retainer-row.active { background: var(--surface2); }
+  .retainer-row.active::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px; border-radius: 0 2px 2px 0;
+    background: var(--row-color, #fff);
+  }
+
+  .retainer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .retainer-name { font-size: 12px; color: var(--text); width: 76px; flex-shrink: 0; }
+  .retainer-bar-wrap { flex: 1; height: 5px; background: var(--muted2); border-radius: 99px; overflow: hidden; }
+  .retainer-bar-fill { height: 100%; border-radius: 99px; transition: width 0.7s ease; }
+  .retainer-count { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; flex-shrink: 0; width: 44px; text-align: right; }
+  .retainer-count em { font-style: normal; font-family: 'DM Mono', monospace; font-weight: 400; color: var(--muted); font-size: 10px; }
+
+  /* ── ACTIVE CLIENT BAR ── */
+  .active-client-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 0; }
+
+  /* ── STATS ── */
+  .stats-scroll { display: flex; gap: 10px; padding: 14px 16px; overflow-x: auto; scrollbar-width: none; }
+  .stats-scroll::-webkit-scrollbar { display: none; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; min-width: 120px; flex-shrink: 0; }
+  .stat-card.wide { min-width: 140px; }
+  .stat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -1px; color: var(--text); line-height: 1; }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.orange { color: var(--accent2); }
+  .stat-delta { font-size: 9px; color: var(--accent); margin-top: 5px; }
+
+  /* ── FILTER ROW ── */
+  .filter-row { display: flex; gap: 6px; padding: 0 16px 14px; overflow-x: auto; scrollbar-width: none; }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .section-label { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); padding: 0 16px 12px; }
+
+  /* ── VIDEO CARDS ── */
+  .video-list { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
+  .video-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; animation: fadeUp 0.3s ease both; }
+  .video-top { display: flex; gap: 12px; padding: 13px 13px 10px; align-items: flex-start; }
+  .video-thumb { width: 56px; height: 74px; border-radius: 7px; flex-shrink: 0; overflow: hidden; position: relative; background: var(--muted2); }
+  .video-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-duration { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.72); color: #fff; font-size: 8px; padding: 2px 4px; border-radius: 3px; font-family: 'DM Mono', monospace; }
+  .thumb-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .video-right { flex: 1; min-width: 0; }
+  .video-desc { font-size: 12px; color: var(--text); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .video-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .video-date { font-size: 10px; color: var(--muted); }
+  .video-metrics { display: flex; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .metric-box { flex: 1; padding: 10px 12px; border-right: 1px solid var(--border); text-align: center; }
+  .metric-box:last-child { border-right: none; }
+  .metric-label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
+  .metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: -0.5px; color: var(--text); }
+  .metric-val.green { color: var(--accent); }
+  .metric-sub { font-size: 9px; color: var(--muted); margin-top: 2px; }
+  .product-row { display: flex; align-items: center; gap: 10px; padding: 11px 13px; }
+  .product-icon { width: 32px; height: 32px; border-radius: 6px; background: var(--muted2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .product-details { flex: 1; min-width: 0; }
+  .product-name-sm { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .product-id-tag { font-size: 9px; color: var(--muted); margin-top: 2px; }
+  .no-product-label { font-size: 10px; color: var(--muted); font-style: italic; }
+  .gmv-pill { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
+
+  /* ── BOTTOM PANELS ── */
+  .panels { padding: 20px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .panel-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .product-rank { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .product-rank:last-child { border-bottom: none; }
+  .rank-num { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--muted2); width: 18px; text-align: center; flex-shrink: 0; }
+  .rank-num.top { color: var(--accent); }
+  .rank-img { width: 32px; height: 32px; border-radius: 5px; background: var(--muted2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .rank-info { flex: 1; min-width: 0; }
+  .rank-name { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank-stats { font-size: 9px; color: var(--muted); margin-top: 2px; }
+  .rank-gmv { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+  .timeline-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .timeline-row:last-child { border-bottom: none; }
+  .tl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted2); flex-shrink: 0; margin-top: 4px; }
+  .tl-dot.new { background: var(--accent); }
+  .tl-dot.notag { background: var(--accent2); }
+  .tl-text { font-size: 11px; color: var(--text); line-height: 1.5; flex: 1; }
+  .tl-text span { color: var(--muted); }
+  .tl-time { font-size: 9px; color: var(--muted); flex-shrink: 0; white-space: nowrap; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
+  .empty-state a { color: var(--accent); }
+
+  /* ── DESKTOP OVERRIDES ── */
+  @media (min-width: 768px) {
+    .topnav { display: none; }
+    .desktop-topbar { display: flex !important; align-items: center; justify-content: space-between; padding: 18px 28px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .retainer-panel { margin: 16px 28px 0; }
+    .active-client-bar { padding: 14px 28px 0; }
+    .stats-scroll { padding: 16px 28px; gap: 12px; }
+    .stat-card { min-width: 0; flex: 1; }
+    .section-label { padding: 0 28px 12px; }
+    .filter-row { padding: 0 28px 14px; }
+    .video-list { padding: 0 28px; }
+    .panels { padding: 20px 28px 28px; flex-direction: row; }
+    .panel { flex: 1; }
+  }
+  .desktop-topbar { display: none; }
+{% endblock %}
+
+{% block content %}
+
+<!-- MOBILE TOP NAV -->
+<div class="topnav">
+  <div class="logo">TRAKR</div>
+  <div class="nav-right">
+    <button class="btn-sync" onclick="syncAll(this)">↺ Sync</button>
+    <a href="/settings" class="menu-btn">⚙</a>
+  </div>
+</div>
+
+<!-- DESKTOP TOPBAR -->
+<div class="desktop-topbar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:10px;height:10px;border-radius:50%;background:{{ active.brand_color }};flex-shrink:0;"></div>
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;">{{ active.brand_name }}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:1px;">
+        {% if active.last_synced %}synced {{ active.last_synced | timeago }}{% else %}never synced{% endif %}
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    {% if active_period %}
+    <div class="date-pill">{{ active_period.period_start | datefmt }} – {{ today | datefmt }}</div>
+    {% endif %}
+    <button class="btn-sync" onclick="syncClient({{ active.id }}, this)">↺ Sync Now</button>
+  </div>
+</div>
+
+<!-- RETAINER PROGRESS PANEL -->
+<div class="retainer-panel">
+  <div class="retainer-panel-header">
+    <div class="retainer-panel-title">Retainer Progress</div>
+    <div class="retainer-month">Active Periods</div>
+  </div>
+
+  {% for client in clients %}
+  <a href="/?client={{ client.id }}" style="display:block;">
+    <div class="retainer-row {% if client.id == active.id %}active{% endif %}"
+         style="--row-color:{{ client.brand_color }};">
+      <div class="retainer-dot" style="background:{{ client.brand_color }};"></div>
+      <div class="retainer-name">{{ client.brand_name }}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <div class="retainer-bar-wrap" style="flex:1;margin-right:10px;">
+            <div class="retainer-bar-fill" style="width:{{ client.period_pct or 0 }}%;background:{{ client.brand_color }};"></div>
+          </div>
+          <div class="retainer-count" style="color:{{ client.brand_color }};">
+            {{ client.posts_completed or 0 }}<em>/{{ client.post_target }}</em>
+          </div>
+        </div>
+        <div style="font-size:9px;color:#888;letter-spacing:0.3px;">
+          {% if client.period_start %}
+            Started {{ client.period_start | datefmt }} ·
+            {% if client.days_left is not none %}
+              {% if client.days_left <= 3 %}
+                <span style="color:#ff4444;">{{ client.days_left }}d left ⚠</span>
+              {% else %}
+                <span style="color:{{ client.brand_color }};">{{ client.days_left }}d left</span>
+              {% endif %}
+            {% endif %}
+          {% else %}
+            <span style="color:var(--muted);">No active period · <a href="/settings" style="color:var(--accent);">set one</a></span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+<!-- ACTIVE CLIENT BAR -->
+<div class="active-client-bar">
+  <div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:{{ active.brand_color }};flex-shrink:0;"></div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;">{{ active.brand_name }}</div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);margin-top:3px;padding-left:18px;">
+      {% if active.tiktok_handle %}@{{ active.tiktok_handle }} · {% endif %}
+      {% if active.last_synced %}synced {{ active.last_synced | timeago }}{% else %}never synced{% endif %}
+    </div>
+  </div>
+  {% if active_period %}
+  <div class="date-pill">{{ active_period.period_start | datefmt }} – {{ today | datefmt }}</div>
+  {% endif %}
+</div>
+
+<!-- STATS -->
+<div class="stats-scroll">
+  <div class="stat-card">
+    <div class="stat-label">Videos</div>
+    <div class="stat-value">{{ stats.video_count or 0 }}</div>
+    <div class="stat-delta">this period</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Tagged</div>
+    <div class="stat-value">{{ stats.tagged_count or 0 }}</div>
+    <div class="stat-delta">
+      {% if stats.video_count and stats.video_count > 0 %}
+        {{ ((stats.tagged_count or 0) / stats.video_count * 100) | round | int }}% of videos
+      {% else %}—{% endif %}
+    </div>
+  </div>
+  <div class="stat-card wide">
+    <div class="stat-label">Total Views</div>
+    <div class="stat-value">{{ stats.total_views | num }}</div>
+    <div class="stat-delta">all videos</div>
+  </div>
+  <div class="stat-card wide">
+    <div class="stat-label">Est. GMV</div>
+    <div class="stat-value green">{{ stats.total_gmv | gmv }}</div>
+    <div class="stat-delta">from tagged videos</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Products</div>
+    <div class="stat-value orange">{{ stats.product_count or 0 }}</div>
+    <div class="stat-delta">approved</div>
+  </div>
+</div>
+
+<div class="section-label">Video Performance</div>
+<div class="filter-row">
+  <a href="/?client={{ active.id }}"                         class="filter-tab {% if not filter_type %}active{% endif %}">All</a>
+  <a href="/?client={{ active.id }}&filter=tagged"           class="filter-tab {% if filter_type == 'tagged' %}active{% endif %}">Has Product</a>
+  <a href="/?client={{ active.id }}&filter=untagged"         class="filter-tab {% if filter_type == 'untagged' %}active{% endif %}">No Product</a>
+</div>
+
+<!-- VIDEO CARDS -->
+<div class="video-list">
+  {% if videos %}
+    {% for v in videos %}
+    <div class="video-card" style="animation-delay:{{ loop.index0 * 0.04 }}s;">
+      <div class="video-top">
+        <div class="video-thumb">
+          {% if v.cover_url %}
+          <img src="{{ v.cover_url }}" alt="thumb"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+          <div class="thumb-fallback" style="display:none">🎬</div>
+          {% else %}
+          <div class="thumb-fallback">🎬</div>
+          {% endif %}
+          {% if v.duration %}
+          <div class="thumb-duration">{{ v.duration | duration }}</div>
+          {% endif %}
+        </div>
+        <div class="video-right">
+          <div class="video-desc">{{ v.description or '(no description)' }}</div>
+          <div class="video-meta-row">
+            <div class="video-date">{{ v.posted_at | datefmt }}</div>
+            {% if v.tagged_product_id %}
+            <div class="status-badge live"><div class="dot live"></div>Live</div>
+            {% else %}
+            <div class="status-badge notag"><div class="dot notag"></div>No Tag</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="video-metrics">
+        <div class="metric-box">
+          <div class="metric-label">Views</div>
+          <div class="metric-val">{{ v.views | num }}</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Likes</div>
+          <div class="metric-val">{{ v.likes | num }}</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">GMV</div>
+          {% if v.gmv %}
+          <div class="metric-val green">{{ v.gmv | gmv }}</div>
+          <div class="metric-sub">{{ v.orders or 0 }} orders</div>
+          {% else %}
+          <div class="metric-val" style="color:var(--muted)">—</div>
+          <div class="metric-sub">unmonetized</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="product-row">
+        {% if v.tagged_product_id %}
+        <div class="product-icon">📦</div>
+        <div class="product-details">
+          <div class="product-name-sm">{{ v.product_name or v.tagged_product_id }}</div>
+          <div class="product-id-tag">ID: {{ v.tagged_product_id }}</div>
+        </div>
+        {% if v.gmv %}
+        <div class="gmv-pill">{{ v.gmv | gmv }}</div>
+        {% endif %}
+        {% else %}
+        <div class="product-details">
+          <div class="no-product-label">⚠ No product tagged — {{ v.views | num }} views unmonetized</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    No videos yet for {{ active.brand_name }}.
+    {% if active.tiktok_handle %}
+    <br><button class="btn-sync" style="margin-top:12px;" onclick="syncClient({{ active.id }}, this)">↺ Sync Now</button>
+    {% else %}
+    <br>Add a TikTok handle in <a href="/settings">Settings</a> to start syncing.
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- BOTTOM PANELS -->
+<div class="panels">
+  <div class="panel">
+    <div class="panel-title">Top Products by GMV</div>
+    {% if top_products %}
+      {% for p in top_products %}
+      <div class="product-rank">
+        <div class="rank-num {% if loop.index <= 2 %}top{% endif %}">{{ loop.index }}</div>
+        <div class="rank-img">📦</div>
+        <div class="rank-info">
+          <div class="rank-name">{{ p.product_name or p.product_id }}</div>
+          <div class="rank-stats">{{ p.total_orders or 0 }} orders · {{ p.video_count or 0 }} videos</div>
+        </div>
+        <div class="rank-gmv">{{ p.total_gmv | gmv }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div style="font-size:11px;color:var(--muted);padding:8px 0;">No products yet — add them in <a href="/settings" style="color:var(--accent);">Settings</a>.</div>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Recent Activity</div>
+    {% if recent %}
+      {% for item in recent %}
+      <div class="timeline-row">
+        <div class="tl-dot {% if item.tagged_product_id %}new{% elif not item.tagged_product_id %}notag{% endif %}"></div>
+        <div class="tl-text">
+          {% if item.tagged_product_id %}
+          New video tagged <strong>{{ item.product_name or item.tagged_product_id }}</strong>
+          <span>— {{ item.views | num }} views</span>
+          {% else %}
+          Video posted <strong>with no product tag</strong>
+          <span>— {{ item.views | num }} views unmonetized</span>
+          {% endif %}
+        </div>
+        <div class="tl-time">{{ item.event_time | timeago }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div style="font-size:11px;color:var(--muted);padding:8px 0;">No activity yet.</div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function syncAll(btn) {
+  btn.textContent = '↺ Syncing…';
+  btn.disabled = true;
+  fetch('/api/sync', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { location.reload(); })
+    .catch(() => { btn.textContent = '↺ Sync'; btn.disabled = false; });
+}
+
+function syncClient(clientId, btn) {
+  btn.textContent = '↺ Syncing…';
+  btn.disabled = true;
+  fetch(`/api/sync/${clientId}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { location.reload(); })
+    .catch(() => { btn.textContent = '↺ Sync Now'; btn.disabled = false; });
+}
+</script>
+{% endblock %}

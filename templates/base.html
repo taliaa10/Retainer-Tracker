@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Trakr{% endblock %}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #222222;
+    --accent: #c8f135;
+    --accent2: #ff6b35;
+    --text: #f0f0f0;
+    --muted: #555;
+    --muted2: #2a2a2a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 80px;
+  }
+
+  a { text-decoration: none; color: inherit; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; gap: 4px; padding: 12px 0;
+    color: var(--muted); font-size: 9px; letter-spacing: 0.5px;
+    text-transform: uppercase; transition: color 0.15s; cursor: pointer;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-icon { font-size: 18px; line-height: 1; }
+
+  /* ── DESKTOP SIDEBAR ── */
+  .sidebar-desktop { display: none; }
+
+  .layout { display: block; }
+
+  @media (min-width: 768px) {
+    body { padding-bottom: 0; }
+    .bottom-nav { display: none; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar-desktop {
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: sticky; top: 0; height: 100vh;
+      padding: 24px 0;
+    }
+
+    .sidebar-logo {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px;
+      color: var(--accent); padding: 0 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo span { color: var(--text); }
+
+    .sidebar-nav { padding: 16px 0; }
+
+    .sidebar-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px; font-size: 11px; color: var(--muted);
+      cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+      transition: all 0.15s;
+    }
+    .sidebar-item.active {
+      color: var(--accent);
+      background: rgba(200,241,53,0.06);
+      border-left: 2px solid var(--accent);
+    }
+    .sidebar-item:hover:not(.active) { color: var(--text); }
+  }
+
+  /* ── SHARED COMPONENTS ── */
+  .btn-sync {
+    background: var(--accent); color: #0a0a0a;
+    border: none; border-radius: 6px;
+    padding: 7px 13px; font-family: 'DM Mono', monospace;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.5px;
+    text-transform: uppercase; cursor: pointer;
+  }
+  .btn-sync:hover { opacity: 0.9; }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 9px; letter-spacing: 0.3px; text-transform: uppercase;
+  }
+  .status-badge.live { background: rgba(200,241,53,0.1); color: var(--accent); }
+  .status-badge.pending { background: rgba(255,107,53,0.1); color: var(--accent2); }
+  .status-badge.notag { background: rgba(85,85,85,0.15); color: var(--muted); }
+
+  .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .dot.live { background: var(--accent); }
+  .dot.pending { background: var(--accent2); }
+  .dot.notag { background: var(--muted); }
+
+  .filter-tab {
+    padding: 6px 13px; border-radius: 20px; font-size: 10px;
+    letter-spacing: 0.4px; text-transform: uppercase; cursor: pointer;
+    border: 1px solid var(--border); color: var(--muted);
+    white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
+  }
+  .filter-tab.active { color: var(--accent); border-color: rgba(200,241,53,0.4); background: rgba(200,241,53,0.07); }
+
+  .date-pill {
+    padding: 6px 11px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 20px;
+    font-size: 10px; color: var(--muted); white-space: nowrap;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  {% block extra_css %}{% endblock %}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- DESKTOP SIDEBAR -->
+  <div class="sidebar-desktop">
+    <div class="sidebar-logo">TRAKR</div>
+    <div class="sidebar-nav">
+      <a href="/"         class="sidebar-item {% if page == 'dashboard' %}active{% endif %}">▦ Dashboard</a>
+      <a href="/videos"   class="sidebar-item {% if page == 'videos'    %}active{% endif %}">◈ Videos</a>
+      <a href="/products" class="sidebar-item {% if page == 'products'  %}active{% endif %}">◉ Products</a>
+      <a href="/settings" class="sidebar-item {% if page == 'settings'  %}active{% endif %}">◎ Settings</a>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-desktop">
+    {% block content %}{% endblock %}
+  </div>
+
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="bottom-nav">
+  <a href="/"         class="nav-btn {% if page == 'dashboard' %}active{% endif %}"><div class="nav-icon">▦</div><div>Dash</div></a>
+  <a href="/videos"   class="nav-btn {% if page == 'videos'    %}active{% endif %}"><div class="nav-icon">◈</div><div>Videos</div></a>
+  <a href="/products" class="nav-btn {% if page == 'products'  %}active{% endif %}"><div class="nav-icon">◉</div><div>Products</div></a>
+  <a href="/settings" class="nav-btn {% if page == 'settings'  %}active{% endif %}"><div class="nav-icon">◎</div><div>Settings</div></a>
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
