@@ -257,11 +257,18 @@ def trigger_sync_client(client_id):
 # ── STARTUP ───────────────────────────────────────────────────────────────────
 
 def create_app():
-    db.init_db()
+    try:
+        db.init_db()
+    except Exception as e:
+        logger.error(f"DB init failed at startup: {e}")
+        logger.error("App will start but DB operations will fail — check DATABASE_URL")
 
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(sync.sync_all, 'interval', hours=24, id='daily_sync')
-    scheduler.start()
+    try:
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(sync.sync_all, 'interval', hours=24, id='daily_sync')
+        scheduler.start()
+    except Exception as e:
+        logger.error(f"Scheduler failed to start: {e}")
 
     return app
 
