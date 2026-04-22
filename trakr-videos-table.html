@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trakr — Videos Table</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #222222;
+    --accent: #c8f135;
+    --accent2: #ff6b35;
+    --text: #f0f0f0;
+    --muted: #555;
+    --muted2: #2a2a2a;
+    --leefar: #f5c518;
+    --forchics: #ff6eb4;
+    --catakor: #4d9fff;
+    --boldbuns: #b06eff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding-bottom: 80px;
+    overflow-x: hidden;
+  }
+
+  /* ── TOP NAV ── */
+  .topnav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 13px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; color: var(--accent); }
+  .page-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--text); }
+
+  .view-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .toggle-btn {
+    padding: 6px 10px; font-size: 12px; cursor: pointer;
+    color: var(--muted); transition: all 0.15s;
+    border-right: 1px solid var(--border);
+  }
+
+  .toggle-btn:last-child { border-right: none; }
+  .toggle-btn.active { background: var(--surface2); color: var(--accent); }
+
+  /* ── FILTER STRIP ── */
+  .filter-strip {
+    display: flex; gap: 6px;
+    padding: 11px 16px;
+    overflow-x: auto; scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .filter-strip::-webkit-scrollbar { display: none; }
+
+  .fchip {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 11px; border-radius: 20px; font-size: 10px;
+    cursor: pointer; border: 1px solid var(--border); color: var(--muted);
+    white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
+  }
+
+  .fchip.active { color: var(--text); border-color: var(--muted); background: var(--surface2); }
+  .fchip.all.active { color: var(--accent); border-color: rgba(200,241,53,0.4); background: rgba(200,241,53,0.07); }
+  .fchip .cdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .sort-chip {
+    margin-left: auto; flex-shrink: 0;
+    padding: 5px 11px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 20px;
+    font-size: 10px; color: var(--muted); cursor: pointer; white-space: nowrap;
+  }
+
+  /* ── VIDEO COUNT ── */
+  .table-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 8px;
+  }
+
+  .table-count { font-size: 10px; color: var(--muted); }
+  .table-count strong { color: var(--text); }
+
+  /* ── TABLE WRAPPER — horizontal scroll ── */
+  .table-scroll {
+    overflow-x: auto;
+    padding: 0 16px 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted2) transparent;
+  }
+
+  .table-scroll::-webkit-scrollbar { height: 4px; }
+  .table-scroll::-webkit-scrollbar-track { background: transparent; }
+  .table-scroll::-webkit-scrollbar-thumb { background: var(--muted2); border-radius: 2px; }
+
+  /* ── TABLE ── */
+  .vtable {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  /* HEADER */
+  .vtable thead tr {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .vtable th {
+    padding: 9px 12px;
+    text-align: left;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+    white-space: nowrap;
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+  }
+
+  .vtable th:hover { color: var(--text); }
+  .vtable th:last-child { border-right: none; }
+  .vtable th.sorted { color: var(--accent); }
+
+  .sort-arrow { margin-left: 4px; font-size: 8px; }
+
+  /* ROWS */
+  .vtable tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+    cursor: pointer;
+    animation: fadeIn 0.25s ease both;
+  }
+
+  .vtable tbody tr:hover { background: var(--surface2); }
+  .vtable tbody tr:last-child { border-bottom: none; }
+
+  .vtable tbody tr:nth-child(1)  { animation-delay: 0.02s; }
+  .vtable tbody tr:nth-child(2)  { animation-delay: 0.04s; }
+  .vtable tbody tr:nth-child(3)  { animation-delay: 0.06s; }
+  .vtable tbody tr:nth-child(4)  { animation-delay: 0.08s; }
+  .vtable tbody tr:nth-child(5)  { animation-delay: 0.10s; }
+  .vtable tbody tr:nth-child(6)  { animation-delay: 0.12s; }
+  .vtable tbody tr:nth-child(7)  { animation-delay: 0.14s; }
+  .vtable tbody tr:nth-child(8)  { animation-delay: 0.16s; }
+  .vtable tbody tr:nth-child(9)  { animation-delay: 0.18s; }
+  .vtable tbody tr:nth-child(10) { animation-delay: 0.20s; }
+  .vtable tbody tr:nth-child(11) { animation-delay: 0.22s; }
+  .vtable tbody tr:nth-child(12) { animation-delay: 0.24s; }
+
+  .vtable td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .vtable td:last-child { border-right: none; }
+
+  /* ── THUMBNAIL CELL ── */
+  .td-thumb {
+    width: 48px;
+    padding: 6px 8px !important;
+  }
+
+  .thumb-wrap {
+    width: 34px; height: 44px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--muted2);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .thumb-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+  }
+
+  .thumb-wrap-fallback {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  /* ── BRAND CELL ── */
+  .td-brand { width: 20px; padding: 8px 6px !important; }
+
+  .brand-bar {
+    width: 3px; height: 28px;
+    border-radius: 99px;
+  }
+
+  /* ── DESC CELL ── */
+  .td-desc {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+    font-size: 11px;
+  }
+
+  /* ── DATE CELL ── */
+  .td-date { color: var(--muted); font-size: 10px; }
+
+  /* ── METRIC CELLS ── */
+  .td-num {
+    text-align: right;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .td-num.green { color: var(--accent); }
+  .td-num.dim { color: var(--muted); }
+
+  /* ── PRODUCT CELL ── */
+  .td-product { max-width: 160px; }
+
+  .product-cell-inner {
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .prod-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+  .prod-label {
+    font-size: 10px; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 130px;
+  }
+
+  .prod-label.none { color: var(--accent2); }
+
+  /* ── STATUS CELL ── */
+  .td-status { padding: 8px 10px !important; }
+
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status-dot.live { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
+  .status-dot.notag { background: var(--accent2); }
+  .status-dot.syncing { background: var(--muted); }
+
+  /* ── TOTALS ROW ── */
+  .totals-row td {
+    background: var(--surface) !important;
+    border-top: 2px solid var(--border) !important;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 9px 12px !important;
+  }
+
+  .totals-row td.total-val {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--accent);
+    text-align: right;
+  }
+
+  .totals-row td.total-label {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface); border-top: 1px solid var(--border);
+    display: flex; z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 0; cursor: pointer; color: var(--muted); font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.15s; }
+  .nav-btn.active { color: var(--accent); }
+  .nav-icon { font-size: 18px; line-height: 1; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-4px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── DESKTOP ── */
+  @media (min-width: 768px) {
+    body { padding-bottom: 0; }
+    .bottom-nav { display: none; }
+    .layout { display: grid; grid-template-columns: 200px 1fr; min-height: 100vh; }
+    .sidebar-desktop { display: flex !important; flex-direction: column; background: var(--surface); border-right: 1px solid var(--border); position: sticky; top: 0; height: 100vh; padding: 24px 0; }
+    .sidebar-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: var(--accent); padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+    .sidebar-nav { padding: 16px 0; }
+    .sidebar-item { display: flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 11px; color: var(--muted); cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.15s; }
+    .sidebar-item.active { color: var(--accent); background: rgba(200,241,53,0.06); border-left: 2px solid var(--accent); }
+    .topnav { display: none; }
+    .desktop-topbar { display: flex !important; align-items: center; justify-content: space-between; padding: 16px 28px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .filter-strip { padding: 11px 28px; }
+    .table-meta { padding: 10px 28px 8px; }
+    .table-scroll { padding: 0 28px 28px; }
+    .td-desc { max-width: 280px; }
+  }
+
+  .sidebar-desktop { display: none; }
+  .desktop-topbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <div class="sidebar-desktop">
+    <div class="sidebar-logo">TRAKR</div>
+    <div class="sidebar-nav">
+      <div class="sidebar-item">▦ Dashboard</div>
+      <div class="sidebar-item active">◈ Videos</div>
+      <div class="sidebar-item">◉ Products</div>
+      <div class="sidebar-item">◎ Settings</div>
+    </div>
+  </div>
+
+  <div class="main-desktop">
+
+    <div class="topnav">
+      <div class="logo">TRAKR</div>
+      <div class="page-title">Videos</div>
+      <div class="view-toggle">
+        <div class="toggle-btn active" title="Table">≡</div>
+        <div class="toggle-btn" title="Grid">⊞</div>
+      </div>
+    </div>
+
+    <div class="desktop-topbar">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;">Videos</div>
+      <div class="view-toggle">
+        <div class="toggle-btn active">≡ Table</div>
+        <div class="toggle-btn">⊞ Grid</div>
+      </div>
+    </div>
+
+    <div class="filter-strip">
+      <div class="fchip all active">All</div>
+      <div class="fchip"><div class="cdot" style="background:var(--leefar)"></div>Leefar</div>
+      <div class="fchip"><div class="cdot" style="background:var(--forchics)"></div>Forchics</div>
+      <div class="fchip"><div class="cdot" style="background:var(--catakor)"></div>Cata-kor</div>
+      <div class="fchip"><div class="cdot" style="background:var(--boldbuns)"></div>Bold Buns</div>
+      <div class="fchip">⚠ No Tag</div>
+      <div class="sort-chip">↓ Newest</div>
+    </div>
+
+    <div class="table-meta">
+      <div class="table-count"><strong>73</strong> videos across all clients · Apr 2026</div>
+    </div>
+
+    <div class="table-scroll">
+      <table class="vtable">
+        <thead>
+          <tr>
+            <th style="width:48px;"></th>
+            <th style="width:20px;"></th>
+            <th class="sorted">Date <span class="sort-arrow">↓</span></th>
+            <th>Video</th>
+            <th>Views <span class="sort-arrow" style="opacity:0.3">↕</span></th>
+            <th>Likes <span class="sort-arrow" style="opacity:0.3">↕</span></th>
+            <th>Comments <span class="sort-arrow" style="opacity:0.3">↕</span></th>
+            <th>Product</th>
+            <th>GMV <span class="sort-arrow" style="opacity:0.3">↕</span></th>
+            <th>Orders <span class="sort-arrow" style="opacity:0.3">↕</span></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- Row 1 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=80&h=110&fit=crop&crop=face" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">💆</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--leefar)"></div></td>
+            <td class="td-date">Apr 21</td>
+            <td class="td-desc">Trying the new PDRN peptide balm stick live on camera…</td>
+            <td class="td-num">2.2M</td>
+            <td class="td-num">75.4K</td>
+            <td class="td-num">502</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--leefar)"></div><div class="prod-label">Leefar 3-Pack Bundle</div></div></td>
+            <td class="td-num green">$12.5K</td>
+            <td class="td-num">84</td>
+            <td class="td-status"><div class="status-dot live"></div></td>
+          </tr>
+
+          <!-- Row 2 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=80&h=110&fit=crop&crop=face" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">✨</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--forchics)"></div></td>
+            <td class="td-date">Apr 20</td>
+            <td class="td-desc">POV: your 40yr old skin after this serum for 30 days</td>
+            <td class="td-num">4.7M</td>
+            <td class="td-num">183K</td>
+            <td class="td-num">1.2K</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--forchics)"></div><div class="prod-label">Forchics Lash Serum</div></div></td>
+            <td class="td-num green">$31.2K</td>
+            <td class="td-num">208</td>
+            <td class="td-status"><div class="status-dot live"></div></td>
+          </tr>
+
+          <!-- Row 3 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80&h=110&fit=crop&crop=face" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">🔬</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--catakor)"></div></td>
+            <td class="td-date">Apr 19</td>
+            <td class="td-desc">Korean skin cycling routine — night 1 breakdown</td>
+            <td class="td-num">880K</td>
+            <td class="td-num">29.1K</td>
+            <td class="td-num">344</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--catakor)"></div><div class="prod-label">PDRN Pink Collagen Balm</div></div></td>
+            <td class="td-num green">$4.9K</td>
+            <td class="td-num">33</td>
+            <td class="td-status"><div class="status-dot live"></div></td>
+          </tr>
+
+          <!-- Row 4 — no tag -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=80&h=110&fit=crop&crop=face" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">☀️</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--boldbuns)"></div></td>
+            <td class="td-date">Apr 18</td>
+            <td class="td-desc">Morning routine vlog — no filter, no makeup</td>
+            <td class="td-num">312K</td>
+            <td class="td-num">11.2K</td>
+            <td class="td-num">89</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--accent2)"></div><div class="prod-label none">⚠ no product tagged</div></div></td>
+            <td class="td-num dim">—</td>
+            <td class="td-num dim">—</td>
+            <td class="td-status"><div class="status-dot notag"></div></td>
+          </tr>
+
+          <!-- Row 5 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=80&h=110&fit=crop&crop=face" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">💉</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--leefar)"></div></td>
+            <td class="td-date">Apr 17</td>
+            <td class="td-desc">I tried the glass skin collagen treatment so you don't have to</td>
+            <td class="td-num">1.1M</td>
+            <td class="td-num">44.8K</td>
+            <td class="td-num">621</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--leefar)"></div><div class="prod-label">Leefar 3-Pack Bundle</div></div></td>
+            <td class="td-num green">$8.75K</td>
+            <td class="td-num">58</td>
+            <td class="td-status"><div class="status-dot live"></div></td>
+          </tr>
+
+          <!-- Row 6 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=80&h=110&fit=crop&crop=faces&facepad=3" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">💆</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--boldbuns)"></div></td>
+            <td class="td-date">Apr 16</td>
+            <td class="td-desc">My hair went from this to THIS in 3 weeks no cap</td>
+            <td class="td-num">1.9M</td>
+            <td class="td-num">91.3K</td>
+            <td class="td-num">834</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--boldbuns)"></div><div class="prod-label">Bold Buns Hair Oil</div></div></td>
+            <td class="td-num green">$14.2K</td>
+            <td class="td-num">95</td>
+            <td class="td-status"><div class="status-dot live"></div></td>
+          </tr>
+
+          <!-- Row 7 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=80&h=110&fit=crop&crop=face&facepad=4" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">✨</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--forchics)"></div></td>
+            <td class="td-date">Apr 15</td>
+            <td class="td-desc">Lash serum week 3 update — the before & after is insane</td>
+            <td class="td-num">640K</td>
+            <td class="td-num">22.1K</td>
+            <td class="td-num">198</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--forchics)"></div><div class="prod-label">Forchics Lash Serum</div></div></td>
+            <td class="td-num green">$5.4K</td>
+            <td class="td-num">36</td>
+            <td class="td-status"><div class="status-dot live"></div></td>
+          </tr>
+
+          <!-- Row 8 — no tag -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80&h=110&fit=crop&crop=face&facepad=4" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">🧴</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--catakor)"></div></td>
+            <td class="td-date">Apr 14</td>
+            <td class="td-desc">Rating every Korean skincare product I tried this month</td>
+            <td class="td-num">520K</td>
+            <td class="td-num">18.7K</td>
+            <td class="td-num">211</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--accent2)"></div><div class="prod-label none">⚠ no product tagged</div></div></td>
+            <td class="td-num dim">—</td>
+            <td class="td-num dim">—</td>
+            <td class="td-status"><div class="status-dot notag"></div></td>
+          </tr>
+
+          <!-- Row 9 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=80&h=110&fit=crop&crop=face&facepad=4" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">💊</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--leefar)"></div></td>
+            <td class="td-date">Apr 13</td>
+            <td class="td-desc">So many scams out here — this one actually works</td>
+            <td class="td-num">430K</td>
+            <td class="td-num">16.2K</td>
+            <td class="td-num">143</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--leefar)"></div><div class="prod-label">Leefar Single Pack</div></div></td>
+            <td class="td-num green">$3.1K</td>
+            <td class="td-num">21</td>
+            <td class="td-status"><div class="status-dot live"></div></td>
+          </tr>
+
+          <!-- Row 10 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=80&h=110&fit=crop&crop=face&facepad=4" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">💜</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--boldbuns)"></div></td>
+            <td class="td-date">Apr 12</td>
+            <td class="td-desc">Oiling my scalp every night for a week — here's what happened</td>
+            <td class="td-num">780K</td>
+            <td class="td-num">34.5K</td>
+            <td class="td-num">312</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--boldbuns)"></div><div class="prod-label">Bold Buns Hair Oil</div></div></td>
+            <td class="td-num green">$6.8K</td>
+            <td class="td-num">45</td>
+            <td class="td-status"><div class="status-dot live"></div></td>
+          </tr>
+
+          <!-- Row 11 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=80&h=110&fit=crop&crop=face" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">🩷</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--forchics)"></div></td>
+            <td class="td-date">Apr 11</td>
+            <td class="td-desc">The lash growth serum that's been on my TikTok for weeks</td>
+            <td class="td-num">290K</td>
+            <td class="td-num">9.8K</td>
+            <td class="td-num">77</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--forchics)"></div><div class="prod-label">Forchics Brow Serum</div></div></td>
+            <td class="td-num green">$1.9K</td>
+            <td class="td-num">13</td>
+            <td class="td-status"><div class="status-dot syncing"></div></td>
+          </tr>
+
+          <!-- Row 12 -->
+          <tr>
+            <td class="td-thumb">
+              <div class="thumb-wrap">
+                <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80&h=110&fit=crop&crop=face" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+                <div class="thumb-wrap-fallback" style="display:none">🧴</div>
+              </div>
+            </td>
+            <td class="td-brand"><div class="brand-bar" style="background:var(--catakor)"></div></td>
+            <td class="td-date">Apr 10</td>
+            <td class="td-desc">Wait this serum actually fixed my texture in 2 weeks</td>
+            <td class="td-num">1.4M</td>
+            <td class="td-num">58.2K</td>
+            <td class="td-num">490</td>
+            <td class="td-product"><div class="product-cell-inner"><div class="prod-dot" style="background:var(--catakor)"></div><div class="prod-label">AGE-R AMP+ Serum</div></div></td>
+            <td class="td-num green">$11.1K</td>
+            <td class="td-num">74</td>
+            <td class="td-status"><div class="status-dot live"></div></td>
+          </tr>
+
+          <!-- TOTALS ROW -->
+          <tr class="totals-row">
+            <td colspan="4" class="total-label">Totals — 12 of 73 shown</td>
+            <td class="total-val" style="text-align:right">15.6M</td>
+            <td class="total-val" style="text-align:right">594K</td>
+            <td class="total-val" style="text-align:right">5.0K</td>
+            <td></td>
+            <td class="total-val" style="text-align:right">$99.8K</td>
+            <td class="total-val" style="text-align:right">667</td>
+            <td></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-btn"><div class="nav-icon">▦</div><div>Dash</div></div>
+  <div class="nav-btn active"><div class="nav-icon">◈</div><div>Videos</div></div>
+  <div class="nav-btn"><div class="nav-icon">◉</div><div>Products</div></div>
+  <div class="nav-btn"><div class="nav-icon">◎</div><div>Settings</div></div>
+</div>
+
+<script>
+  document.querySelectorAll('.fchip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.fchip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Sortable columns
+  document.querySelectorAll('.vtable th').forEach((th, i) => {
+    th.addEventListener('click', () => {
+      document.querySelectorAll('.vtable th').forEach(t => t.classList.remove('sorted'));
+      th.classList.add('sorted');
+    });
+  });
+</script>
+
+</body>
+</html>
