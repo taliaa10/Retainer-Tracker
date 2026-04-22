@@ -92,6 +92,29 @@
 
 <div class="settings-body">
 
+  <!-- ── MY ACCOUNT ── -->
+  <div>
+    <div class="section-header">My TikTok Account</div>
+    <div class="add-client-card">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">
+        Videos are synced from your page and automatically matched to clients by product tag.
+      </div>
+      <form method="POST" action="/settings/creator/update">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Your TikTok Handle</label>
+            <input type="text" name="creator_handle"
+                   value="{{ creator_handle or '' }}"
+                   placeholder="@yourhandle" required>
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ── CLIENTS ── -->
   <div>
     <div class="section-header">Retainer Clients</div>
@@ -128,8 +151,8 @@
                 <input type="text" name="brand_name" value="{{ cd.brand_name }}" required>
               </div>
               <div class="form-group">
-                <label>TikTok Handle</label>
-                <input type="text" name="tiktok_handle" value="{{ cd.tiktok_handle or '' }}" placeholder="@handle">
+                <label>Brand TikTok Page</label>
+                <input type="text" name="tiktok_handle" value="{{ cd.tiktok_handle or '' }}" placeholder="@brandpage">
               </div>
             </div>
             <div class="form-row" style="margin-top:8px;">

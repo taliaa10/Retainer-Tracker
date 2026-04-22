@@ -171,10 +171,19 @@ def settings():
             'active_period': db.get_active_period(c['id']),
             'period_history': db.get_period_history(c['id']),
         })
-    return render_template('settings.html', client_data=client_data)
+    creator_handle = db.get_setting('creator_handle', '')
+    return render_template('settings.html', client_data=client_data,
+                           creator_handle=creator_handle, today=date.today())
 
 
 # ── SETTINGS ACTIONS ──────────────────────────────────────────────────────────
+
+@app.route('/settings/creator/update', methods=['POST'])
+def update_creator():
+    handle = request.form.get('creator_handle', '').strip().lstrip('@')
+    db.set_setting('creator_handle', handle)
+    return redirect(url_for('settings'))
+
 
 @app.route('/settings/clients/add', methods=['POST'])
 def add_client():
@@ -236,19 +245,16 @@ def complete_period(period_id):
 @app.route('/api/sync', methods=['POST'])
 def trigger_sync_all():
     try:
-        sync.sync_all()
-        return jsonify({'status': 'ok'})
+        count = sync.sync_creator()
+        return jsonify({'status': 'ok', 'videos_fetched': count})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/api/sync/<int:client_id>', methods=['POST'])
 def trigger_sync_client(client_id):
-    client = db.get_client(client_id)
-    if not client:
-        return jsonify({'status': 'error', 'message': 'Client not found'}), 404
     try:
-        count = sync.sync_client(client)
+        count = sync.sync_creator()
         return jsonify({'status': 'ok', 'videos_fetched': count})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500

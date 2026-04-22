@@ -91,7 +91,7 @@ def init_db():
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS videos (
                     id SERIAL PRIMARY KEY,
-                    client_id INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                    client_id INTEGER REFERENCES clients(id) ON DELETE SET NULL,
                     video_id TEXT UNIQUE NOT NULL,
                     description TEXT,
                     cover_url TEXT,
@@ -123,6 +123,40 @@ def init_db():
                     videos_fetched INTEGER DEFAULT 0
                 )
             """)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT
+                )
+            """)
+
+    # Drop NOT NULL on client_id for existing tables (idempotent migration)
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("ALTER TABLE videos ALTER COLUMN client_id DROP NOT NULL")
+    except Exception:
+        pass
+
+
+# ── SETTINGS ─────────────────────────────────────────────────────────────────
+
+def get_setting(key, default=None):
+    row = fetchone("SELECT value FROM settings WHERE key = %s", (key,))
+    return row['value'] if row else default
+
+
+def set_setting(key, value):
+    execute("""
+        INSERT INTO settings (key, value) VALUES (%s, %s)
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+    """, (key, value))
+
+
+def get_products_map():
+    """Returns {product_id: client_id} for all active products."""
+    rows = fetchall("SELECT product_id, client_id FROM products WHERE is_active = TRUE")
+    return {r['product_id']: r['client_id'] for r in rows}
 
 
 # ── CLIENTS ──────────────────────────────────────────────────────────────────
@@ -406,6 +440,7 @@ def upsert_video(client_id, video_id, description, cover_url, duration, posted_a
         INSERT INTO videos (client_id, video_id, description, cover_url, duration, posted_at, synced_at)
         VALUES (%s, %s, %s, %s, %s, %s, NOW())
         ON CONFLICT (video_id) DO UPDATE SET
+            client_id  = COALESCE(EXCLUDED.client_id, videos.client_id),
             cover_url  = EXCLUDED.cover_url,
             synced_at  = NOW()
     """, (client_id, video_id, description, cover_url, duration, posted_at))

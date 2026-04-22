@@ -8,16 +8,17 @@ import tikhub
 logger = logging.getLogger(__name__)
 
 
-def sync_client(client):
-    """Sync all videos for a single client. Returns number of videos fetched."""
-    client_id = client["id"]
-    handle = client.get("tiktok_handle")
-
+def sync_creator():
+    """Sync all videos from the creator's own TikTok page.
+    Assigns each video to the client whose product it tags."""
+    handle = db.get_setting('creator_handle')
     if not handle:
-        logger.info(f"Skipping client {client['brand_name']} — no TikTok handle set")
+        logger.warning("No creator handle configured — set it in Settings")
         return 0
 
-    logger.info(f"Syncing {client['brand_name']} (@{handle})")
+    products_map = db.get_products_map()  # {product_id: client_id}
+    logger.info(f"Syncing @{handle} — {len(products_map)} known products")
+
     total_fetched = 0
     cursor = 0
 
@@ -39,18 +40,9 @@ def sync_client(client):
                     except (ValueError, OSError):
                         pass
 
-                db.upsert_video(
-                    client_id=client_id,
-                    video_id=v["video_id"],
-                    description=v["description"],
-                    cover_url=v["cover_url"],
-                    duration=v["duration"],
-                    posted_at=posted_at,
-                )
-
                 tagged_product_id = v["tagged_product_id"]
 
-                # If no product found in list, try fetching video detail
+                # For new videos with no product tag, try fetching video detail
                 if not tagged_product_id and not db.video_exists(v["video_id"]):
                     try:
                         detail = tikhub.fetch_video_detail(v["video_id"])
@@ -59,6 +51,17 @@ def sync_client(client):
                     except Exception as e:
                         logger.warning(f"Could not fetch detail for {v['video_id']}: {e}")
 
+                # Assign to the client who owns this product
+                client_id = products_map.get(tagged_product_id) if tagged_product_id else None
+
+                db.upsert_video(
+                    client_id=client_id,
+                    video_id=v["video_id"],
+                    description=v["description"],
+                    cover_url=v["cover_url"],
+                    duration=v["duration"],
+                    posted_at=posted_at,
+                )
                 db.upsert_video_metrics(
                     video_id=v["video_id"],
                     views=v["views"],
@@ -69,7 +72,6 @@ def sync_client(client):
 
             total_fetched += len(videos)
 
-            # Check if there are more pages
             has_more = (
                 raw.get("data", {}).get("has_more")
                 or raw.get("data", {}).get("hasMore")
@@ -83,25 +85,21 @@ def sync_client(client):
                 break
 
             cursor = next_cursor
-            time.sleep(0.5)  # be polite to TikHub
+            time.sleep(0.5)
 
-        db.log_sync(client_id, "success", total_fetched)
-        logger.info(f"Synced {total_fetched} videos for {client['brand_name']}")
+        db.log_sync(None, "success", total_fetched)
+        logger.info(f"Synced {total_fetched} videos from @{handle}")
         return total_fetched
 
     except Exception as e:
-        db.log_sync(client_id, f"error: {e}", total_fetched)
-        logger.error(f"Sync failed for {client['brand_name']}: {e}")
+        db.log_sync(None, f"error: {e}", total_fetched)
+        logger.error(f"Sync failed: {e}")
         raise
 
 
 def sync_all():
-    """Sync all clients. Called by APScheduler."""
-    clients = db.get_all_clients()
-    logger.info(f"Starting sync for {len(clients)} clients")
-    for client in clients:
-        try:
-            sync_client(client)
-        except Exception as e:
-            logger.error(f"Failed syncing {client['brand_name']}: {e}")
-        time.sleep(1)
+    """Called by APScheduler."""
+    try:
+        sync_creator()
+    except Exception as e:
+        logger.error(f"Scheduled sync failed: {e}")

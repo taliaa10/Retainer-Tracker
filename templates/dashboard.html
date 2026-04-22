@@ -335,11 +335,7 @@
   {% else %}
   <div class="empty-state">
     No videos yet for {{ active.brand_name }}.
-    {% if active.tiktok_handle %}
-    <br><button class="btn-sync" style="margin-top:12px;" onclick="syncClient({{ active.id }}, this)">↺ Sync Now</button>
-    {% else %}
-    <br>Add a TikTok handle in <a href="/settings">Settings</a> to start syncing.
-    {% endif %}
+    <br><button class="btn-sync" style="margin-top:12px;" onclick="syncAll(this)">↺ Sync Now</button>
   </div>
   {% endif %}
 </div>
