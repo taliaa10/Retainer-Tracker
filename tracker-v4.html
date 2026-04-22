@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trakr</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #222222;
+    --accent: #c8f135;
+    --accent2: #ff6b35;
+    --text: #f0f0f0;
+    --muted: #555;
+    --muted2: #2a2a2a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding-bottom: 80px;
+  }
+
+  /* ── TOP NAV ── */
+  .topnav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; color: var(--accent); }
+  .logo span { color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+
+  .btn-sync {
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 13px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .menu-btn {
+    width: 34px; height: 34px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; cursor: pointer;
+  }
+
+  /* ── RETAINER PANEL ── */
+  .retainer-panel {
+    margin: 14px 16px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .retainer-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .retainer-panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .retainer-month { font-size: 10px; color: var(--muted); }
+
+  .retainer-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+
+  .retainer-row:last-child { border-bottom: none; }
+  .retainer-row:hover { background: var(--surface2); }
+  .retainer-row.active { background: var(--surface2); }
+
+  .retainer-row.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .retainer-row[data-client="leefar"].active::before    { background: #f5c518; }
+  .retainer-row[data-client="forchics"].active::before  { background: #ff6eb4; }
+  .retainer-row[data-client="catakor"].active::before   { background: #4d9fff; }
+  .retainer-row[data-client="boldbuns"].active::before  { background: #b06eff; }
+
+  .retainer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .retainer-name { font-size: 12px; color: var(--text); width: 76px; flex-shrink: 0; }
+
+  .retainer-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: var(--muted2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .retainer-bar-fill { height: 100%; border-radius: 99px; transition: width 0.7s ease; }
+
+  .retainer-count {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    width: 44px;
+    text-align: right;
+  }
+
+  .retainer-count em { font-style: normal; font-family: 'DM Mono', monospace; font-weight: 400; color: var(--muted); font-size: 10px; }
+
+  /* ── ACTIVE CLIENT BAR ── */
+  .active-client-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 0;
+  }
+
+  .active-client-left { display: flex; align-items: center; gap: 8px; }
+
+  .active-client-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  .active-client-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+  }
+
+  .active-client-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  .date-pill {
+    padding: 6px 11px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ── STATS ── */
+  .stats-scroll { display: flex; gap: 10px; padding: 14px 16px; overflow-x: auto; scrollbar-width: none; }
+  .stats-scroll::-webkit-scrollbar { display: none; }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+
+  .stat-card.wide { min-width: 140px; }
+  .stat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -1px;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .stat-value.green { color: var(--accent); }
+  .stat-value.orange { color: var(--accent2); }
+  .stat-delta { font-size: 9px; color: var(--accent); margin-top: 5px; }
+
+  /* ── FILTERS ── */
+  .filter-row { display: flex; gap: 6px; padding: 0 16px 14px; overflow-x: auto; scrollbar-width: none; }
+  .filter-row::-webkit-scrollbar { display: none; }
+
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 16px 12px;
+  }
+
+  .filter-tab {
+    padding: 6px 13px;
+    border-radius: 20px;
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .filter-tab.active { color: var(--accent); border-color: rgba(200,241,53,0.4); background: rgba(200,241,53,0.07); }
+
+  /* ── VIDEO CARDS ── */
+  .video-list { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
+
+  .video-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .video-card:nth-child(1) { animation-delay: 0.04s; }
+  .video-card:nth-child(2) { animation-delay: 0.08s; }
+  .video-card:nth-child(3) { animation-delay: 0.12s; }
+  .video-card:nth-child(4) { animation-delay: 0.16s; }
+  .video-card:nth-child(5) { animation-delay: 0.20s; }
+
+  .video-top { display: flex; gap: 12px; padding: 13px 13px 10px; align-items: flex-start; }
+
+  .video-thumb {
+    width: 56px; height: 74px;
+    border-radius: 7px;
+    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+    background: var(--muted2);
+  }
+
+  .video-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .thumb-duration {
+    position: absolute;
+    bottom: 4px; right: 4px;
+    background: rgba(0,0,0,0.72);
+    color: #fff;
+    font-size: 8px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    backdrop-filter: blur(2px);
+  }
+
+  .thumb-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+
+  .video-thumb:hover .thumb-overlay { background: rgba(0,0,0,0.35); }
+  .play-icon { opacity: 0; color: #fff; font-size: 18px; transition: opacity 0.15s; }
+  .video-thumb:hover .play-icon { opacity: 1; }
+
+  .thumb-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+
+  .video-right { flex: 1; min-width: 0; }
+
+  .video-desc {
+    font-size: 12px; color: var(--text); line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .video-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .video-date { font-size: 10px; color: var(--muted); }
+
+  .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 9px; letter-spacing: 0.3px; text-transform: uppercase; }
+  .status-badge.live { background: rgba(200,241,53,0.1); color: var(--accent); }
+  .status-badge.pending { background: rgba(255,107,53,0.1); color: var(--accent2); }
+  .status-badge.notag { background: rgba(85,85,85,0.15); color: var(--muted); }
+
+  .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .dot.live { background: var(--accent); }
+  .dot.pending { background: var(--accent2); }
+  .dot.notag { background: var(--muted); }
+
+  .video-metrics { display: flex; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+  .metric-box { flex: 1; padding: 10px 12px; border-right: 1px solid var(--border); text-align: center; }
+  .metric-box:last-child { border-right: none; }
+  .metric-label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
+
+  .metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; letter-spacing: -0.5px; color: var(--text); }
+  .metric-val.green { color: var(--accent); }
+  .metric-sub { font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+  .product-row { display: flex; align-items: center; gap: 10px; padding: 11px 13px; }
+
+  .product-icon { width: 32px; height: 32px; border-radius: 6px; background: var(--muted2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+
+  .product-details { flex: 1; min-width: 0; }
+  .product-name { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .product-id-tag { font-size: 9px; color: var(--muted); margin-top: 2px; }
+  .no-product-label { font-size: 10px; color: var(--muted); font-style: italic; }
+
+  .gmv-pill { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
+
+  /* ── BOTTOM PANELS ── */
+  .panels { padding: 20px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+
+  .panel-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+
+  .product-rank { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .product-rank:last-child { border-bottom: none; }
+
+  .rank-num { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--muted2); width: 18px; text-align: center; flex-shrink: 0; }
+  .rank-num.top { color: var(--accent); }
+
+  .rank-img { width: 32px; height: 32px; border-radius: 5px; background: var(--muted2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .rank-info { flex: 1; min-width: 0; }
+  .rank-name { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank-stats { font-size: 9px; color: var(--muted); margin-top: 2px; }
+  .rank-gmv { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+
+  .timeline-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .timeline-row:last-child { border-bottom: none; }
+
+  .tl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted2); flex-shrink: 0; margin-top: 4px; }
+  .tl-dot.new { background: var(--accent); }
+  .tl-dot.sale { background: var(--accent2); }
+
+  .tl-text { font-size: 11px; color: var(--text); line-height: 1.5; flex: 1; }
+  .tl-text span { color: var(--muted); }
+  .tl-time { font-size: 9px; color: var(--muted); flex-shrink: 0; white-space: nowrap; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 0; cursor: pointer; color: var(--muted); font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.15s; }
+  .nav-btn.active { color: var(--accent); }
+  .nav-icon { font-size: 18px; line-height: 1; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── DESKTOP ── */
+  @media (min-width: 768px) {
+    body { padding-bottom: 0; }
+    .bottom-nav { display: none; }
+    .layout { display: grid; grid-template-columns: 200px 1fr; min-height: 100vh; }
+
+    .sidebar-desktop {
+      display: flex !important;
+      flex-direction: column;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: sticky; top: 0; height: 100vh;
+      padding: 24px 0;
+    }
+
+    .sidebar-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: var(--accent); padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo span { color: var(--text); }
+    .sidebar-nav { padding: 16px 0; }
+
+    .sidebar-item { display: flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 11px; color: var(--muted); cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.15s; }
+    .sidebar-item.active { color: var(--accent); background: rgba(200,241,53,0.06); border-left: 2px solid var(--accent); }
+
+    .topnav { display: none; }
+    .desktop-topbar {
+      display: flex !important;
+      align-items: center; justify-content: space-between;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky; top: 0; z-index: 50;
+    }
+
+    .retainer-panel { margin: 16px 28px 0; }
+    .active-client-bar { padding: 14px 28px 0; }
+    .stats-scroll { padding: 16px 28px; gap: 12px; }
+    .stat-card { min-width: 0; flex: 1; }
+    .section-label { padding: 0 28px 12px; }
+    .filter-row { padding: 0 28px 14px; }
+    .video-list { padding: 0 28px; }
+    .panels { padding: 20px 28px 28px; flex-direction: row; }
+    .panel { flex: 1; }
+  }
+
+  .sidebar-desktop { display: none; }
+  .desktop-topbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- DESKTOP SIDEBAR -->
+  <div class="sidebar-desktop">
+    <div class="sidebar-logo">TRAKR</div>
+    <div class="sidebar-nav">
+      <div class="sidebar-item active">▦ Dashboard</div>
+      <div class="sidebar-item">◈ All Videos</div>
+      <div class="sidebar-item">◉ Products</div>
+      <div class="sidebar-item">◎ Reports</div>
+    </div>
+  </div>
+
+  <div class="main-desktop">
+
+    <!-- MOBILE TOP NAV -->
+    <div class="topnav">
+      <div class="logo">TRAKR</div>
+      <div class="nav-right">
+        <button class="btn-sync">↺ Sync</button>
+        <div class="menu-btn">☰</div>
+      </div>
+    </div>
+
+    <!-- DESKTOP TOPBAR -->
+    <div class="desktop-topbar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="desktopDot" style="width:10px;height:10px;border-radius:50%;background:#f5c518;flex-shrink:0;transition:background 0.3s;"></div>
+        <div>
+          <div id="desktopName" style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;">Leefar</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:1px;">Last synced 4 min ago</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div class="date-pill">Apr 1 – Apr 21, 2026 ▾</div>
+        <button class="btn-sync">↺ Sync Now</button>
+      </div>
+    </div>
+
+    <!-- RETAINER PROGRESS PANEL -->
+    <div class="retainer-panel">
+      <div class="retainer-panel-header">
+        <div class="retainer-panel-title">Retainer Progress</div>
+        <div class="retainer-month">Active Periods</div>
+      </div>
+
+      <!-- Leefar — on track -->
+      <div class="retainer-row active" data-client="leefar" data-color="#f5c518" data-name="Leefar">
+        <div class="retainer-dot" style="background:#f5c518;"></div>
+        <div class="retainer-name">Leefar</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div class="retainer-bar-wrap" style="flex:1;margin-right:10px;">
+              <div class="retainer-bar-fill" style="width:73%;background:#f5c518;"></div>
+            </div>
+            <div class="retainer-count" style="color:#f5c518;">22<em>/30</em></div>
+          </div>
+          <div style="font-size:9px;color:#888;letter-spacing:0.3px;">Started Apr 1 · <span style="color:#f5c518;">8 days left</span></div>
+        </div>
+      </div>
+
+      <!-- Forchics — urgent -->
+      <div class="retainer-row" data-client="forchics" data-color="#ff6eb4" data-name="Forchics">
+        <div class="retainer-dot" style="background:#ff6eb4;"></div>
+        <div class="retainer-name">Forchics</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div class="retainer-bar-wrap" style="flex:1;margin-right:10px;">
+              <div class="retainer-bar-fill" style="width:47%;background:#ff6eb4;"></div>
+            </div>
+            <div class="retainer-count" style="color:#ff6eb4;">14<em>/30</em></div>
+          </div>
+          <div style="font-size:9px;color:#888;letter-spacing:0.3px;">Started Apr 8 · <span style="color:#ff4444;">3 days left ⚠</span></div>
+        </div>
+      </div>
+
+      <!-- Cata-kor — on track -->
+      <div class="retainer-row" data-client="catakor" data-color="#4d9fff" data-name="Cata-kor">
+        <div class="retainer-dot" style="background:#4d9fff;"></div>
+        <div class="retainer-name">Cata-kor</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div class="retainer-bar-wrap" style="flex:1;margin-right:10px;">
+              <div class="retainer-bar-fill" style="width:37%;background:#4d9fff;"></div>
+            </div>
+            <div class="retainer-count" style="color:#4d9fff;">11<em>/30</em></div>
+          </div>
+          <div style="font-size:9px;color:#888;letter-spacing:0.3px;">Started Apr 12 · <span style="color:#4d9fff;">19 days left</span></div>
+        </div>
+      </div>
+
+      <!-- Bold Buns — comfortable -->
+      <div class="retainer-row" data-client="boldbuns" data-color="#b06eff" data-name="Bold Buns">
+        <div class="retainer-dot" style="background:#b06eff;"></div>
+        <div class="retainer-name">Bold Buns</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div class="retainer-bar-wrap" style="flex:1;margin-right:10px;">
+              <div class="retainer-bar-fill" style="width:27%;background:#b06eff;"></div>
+            </div>
+            <div class="retainer-count" style="color:#b06eff;">8<em>/30</em></div>
+          </div>
+          <div style="font-size:9px;color:#888;letter-spacing:0.3px;">Started Apr 18 · <span style="color:#b06eff;">27 days left</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ACTIVE CLIENT BAR -->
+    <div class="active-client-bar">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="activeDot" style="width:10px;height:10px;border-radius:50%;background:#f5c518;flex-shrink:0;transition:background 0.3s;"></div>
+          <div id="activeName" style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;transition:color 0.3s;">Leefar</div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;padding-left:18px;">@leefar · synced 4 min ago</div>
+      </div>
+      <div class="date-pill">Apr 1–21 ▾</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-scroll">
+      <div class="stat-card"><div class="stat-label">Videos</div><div class="stat-value">22</div><div class="stat-delta">+3 this week</div></div>
+      <div class="stat-card"><div class="stat-label">Tagged</div><div class="stat-value">19</div><div class="stat-delta">86% of videos</div></div>
+      <div class="stat-card wide"><div class="stat-label">Total Views</div><div class="stat-value">24.3M</div><div class="stat-delta">+2.1M this wk</div></div>
+      <div class="stat-card wide"><div class="stat-label">Est. GMV (30d)</div><div class="stat-value green">$84.2K</div><div class="stat-delta">↑ 18% vs last mo</div></div>
+      <div class="stat-card"><div class="stat-label">Products</div><div class="stat-value orange">12</div><div class="stat-delta">3 sellers</div></div>
+    </div>
+
+    <div class="section-label">Video Performance</div>
+    <div class="filter-row">
+      <div class="filter-tab active">All</div>
+      <div class="filter-tab">Has Product</div>
+      <div class="filter-tab">No Product</div>
+      <div class="filter-tab">Top GMV</div>
+    </div>
+
+    <!-- VIDEO CARDS -->
+    <div class="video-list">
+
+      <div class="video-card">
+        <div class="video-top">
+          <div class="video-thumb">
+            <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=120&h=160&fit=crop&crop=face" alt="thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="thumb-fallback" style="display:none">💆</div>
+            <div class="thumb-overlay"><div class="play-icon">▶</div></div>
+            <div class="thumb-duration">2:57</div>
+          </div>
+          <div class="video-right">
+            <div class="video-desc">Trying the new PDRN peptide balm stick live on camera…</div>
+            <div class="video-meta-row">
+              <div class="video-date">Apr 15</div>
+              <div class="status-badge live"><div class="dot live"></div>Live</div>
+            </div>
+          </div>
+        </div>
+        <div class="video-metrics">
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">2.2M</div></div>
+          <div class="metric-box"><div class="metric-label">Likes</div><div class="metric-val">75.4K</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val green">$12.5K</div><div class="metric-sub">84 orders</div></div>
+        </div>
+        <div class="product-row">
+          <div class="product-icon">🩷</div>
+          <div class="product-details">
+            <div class="product-name">PDRN Pink Collagen Balm</div>
+            <div class="product-id-tag">ID: 17295480905</div>
+          </div>
+          <div class="gmv-pill">$12.5K</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-top">
+          <div class="video-thumb">
+            <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=120&h=160&fit=crop&crop=face" alt="thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="thumb-fallback" style="display:none">✨</div>
+            <div class="thumb-overlay"><div class="play-icon">▶</div></div>
+            <div class="thumb-duration">1:34</div>
+          </div>
+          <div class="video-right">
+            <div class="video-desc">POV: your 40yr old skin after this serum for 30 days</div>
+            <div class="video-meta-row">
+              <div class="video-date">Apr 12</div>
+              <div class="status-badge live"><div class="dot live"></div>Live</div>
+            </div>
+          </div>
+        </div>
+        <div class="video-metrics">
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">4.7M</div></div>
+          <div class="metric-box"><div class="metric-label">Likes</div><div class="metric-val">183K</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val green">$31.2K</div><div class="metric-sub">208 orders</div></div>
+        </div>
+        <div class="product-row">
+          <div class="product-icon">🧴</div>
+          <div class="product-details">
+            <div class="product-name">AGE-R AMP+ Booster Serum</div>
+            <div class="product-id-tag">ID: 17296521034</div>
+          </div>
+          <div class="gmv-pill">$31.2K</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-top">
+          <div class="video-thumb">
+            <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=120&h=160&fit=crop&crop=face" alt="thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="thumb-fallback" style="display:none">🔬</div>
+            <div class="thumb-overlay"><div class="play-icon">▶</div></div>
+            <div class="thumb-duration">3:12</div>
+          </div>
+          <div class="video-right">
+            <div class="video-desc">Korean skin cycling routine — night 1 breakdown</div>
+            <div class="video-meta-row">
+              <div class="video-date">Apr 10</div>
+              <div class="status-badge live"><div class="dot live"></div>Live</div>
+            </div>
+          </div>
+        </div>
+        <div class="video-metrics">
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">880K</div></div>
+          <div class="metric-box"><div class="metric-label">Likes</div><div class="metric-val">29.1K</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val green">$4.9K</div><div class="metric-sub">33 orders</div></div>
+        </div>
+        <div class="product-row">
+          <div class="product-icon">🫧</div>
+          <div class="product-details">
+            <div class="product-name">PDRN Pink Collagen Balm</div>
+            <div class="product-id-tag">ID: 17295480905</div>
+          </div>
+          <div class="gmv-pill">$4.9K</div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-top">
+          <div class="video-thumb">
+            <img src="https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=120&h=160&fit=crop&crop=face" alt="thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="thumb-fallback" style="display:none">☀️</div>
+            <div class="thumb-overlay"><div class="play-icon">▶</div></div>
+            <div class="thumb-duration">0:58</div>
+          </div>
+          <div class="video-right">
+            <div class="video-desc">Morning routine vlog — no filter, no makeup</div>
+            <div class="video-meta-row">
+              <div class="video-date">Apr 8</div>
+              <div class="status-badge notag"><div class="dot notag"></div>No Tag</div>
+            </div>
+          </div>
+        </div>
+        <div class="video-metrics">
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">312K</div></div>
+          <div class="metric-box"><div class="metric-label">Likes</div><div class="metric-val">11.2K</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val" style="color:var(--muted)">—</div><div class="metric-sub">unmonetized</div></div>
+        </div>
+        <div class="product-row">
+          <div class="product-details"><div class="no-product-label">⚠ No product tagged — 312K views unmonetized</div></div>
+        </div>
+      </div>
+
+      <div class="video-card">
+        <div class="video-top">
+          <div class="video-thumb">
+            <img src="https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=120&h=160&fit=crop&crop=face" alt="thumb" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="thumb-fallback" style="display:none">💉</div>
+            <div class="thumb-overlay"><div class="play-icon">▶</div></div>
+            <div class="thumb-duration">2:20</div>
+          </div>
+          <div class="video-right">
+            <div class="video-desc">I tried the "glass skin" collagen treatment so you don't have to</div>
+            <div class="video-meta-row">
+              <div class="video-date">Apr 5</div>
+              <div class="status-badge pending"><div class="dot pending"></div>Syncing</div>
+            </div>
+          </div>
+        </div>
+        <div class="video-metrics">
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">1.1M</div></div>
+          <div class="metric-box"><div class="metric-label">Likes</div><div class="metric-val">44.8K</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val green">$8.75K</div><div class="metric-sub">58 orders</div></div>
+        </div>
+        <div class="product-row">
+          <div class="product-icon">💎</div>
+          <div class="product-details">
+            <div class="product-name">Collagen Volume Multi Balm</div>
+            <div class="product-id-tag">ID: 17297834521</div>
+          </div>
+          <div class="gmv-pill">$8.75K</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- BOTTOM PANELS -->
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-title">Top Products by GMV</div>
+        <div class="product-rank"><div class="rank-num top">1</div><div class="rank-img">🧴</div><div class="rank-info"><div class="rank-name">AGE-R AMP+ Booster Serum</div><div class="rank-stats">ID: 17296521034 · 208 orders · 4 videos</div></div><div class="rank-gmv">$31.2K</div></div>
+        <div class="product-rank"><div class="rank-num top">2</div><div class="rank-img">🩷</div><div class="rank-info"><div class="rank-name">PDRN Pink Collagen Balm</div><div class="rank-stats">ID: 17295480905 · 117 orders · 6 videos</div></div><div class="rank-gmv">$17.4K</div></div>
+        <div class="product-rank"><div class="rank-num">3</div><div class="rank-img">💎</div><div class="rank-info"><div class="rank-name">Collagen Volume Multi Balm</div><div class="rank-stats">ID: 17297834521 · 58 orders · 2 videos</div></div><div class="rank-gmv">$8.75K</div></div>
+        <div class="product-rank"><div class="rank-num">4</div><div class="rank-img">🫧</div><div class="rank-info"><div class="rank-name">PDRN Cleansing Foam</div><div class="rank-stats">ID: 17294112233 · 21 orders · 3 videos</div></div><div class="rank-gmv">$3.15K</div></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Recent Activity</div>
+        <div class="timeline-row"><div class="tl-dot new"></div><div class="tl-text">New video posted with <strong>AGE-R Serum</strong> tagged <span>— 44K views already</span></div><div class="tl-time">2h ago</div></div>
+        <div class="timeline-row"><div class="tl-dot sale"></div><div class="tl-text"><strong>$1,240</strong> in new orders from PDRN Balm video <span>(Apr 15)</span></div><div class="tl-time">5h ago</div></div>
+        <div class="timeline-row"><div class="tl-dot new"></div><div class="tl-text">Apr 12 video crossed <strong>4M views</strong> <span>— best this month</span></div><div class="tl-time">1d ago</div></div>
+        <div class="timeline-row"><div class="tl-dot"></div><div class="tl-text">Morning vlog has <strong>no product tagged</strong> <span>— 312K views unmonetized</span></div><div class="tl-time">3d ago</div></div>
+        <div class="timeline-row"><div class="tl-dot sale"></div><div class="tl-text">Monthly GMV crossed <strong>$80K</strong> <span>— up 18% vs March</span></div><div class="tl-time">4d ago</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-btn active"><div class="nav-icon">▦</div><div>Dash</div></div>
+  <div class="nav-btn"><div class="nav-icon">◈</div><div>Videos</div></div>
+  <div class="nav-btn"><div class="nav-icon">◉</div><div>Products</div></div>
+  <div class="nav-btn"><div class="nav-icon">◎</div><div>Reports</div></div>
+</div>
+
+<script>
+  // Retainer row click — switch active client
+  document.querySelectorAll('.retainer-row').forEach(row => {
+    row.addEventListener('click', () => {
+      document.querySelectorAll('.retainer-row').forEach(r => r.classList.remove('active'));
+      row.classList.add('active');
+
+      const name  = row.dataset.name;
+      const color = row.dataset.color;
+
+      // update active client bar
+      document.getElementById('activeName').textContent = name;
+      document.getElementById('activeDot').style.background = color;
+
+      // update desktop topbar
+      document.getElementById('desktopName').textContent = name;
+      document.getElementById('desktopDot').style.background = color;
+    });
+  });
+
+  // Filter tabs
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // Bottom nav
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trakr — Products</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #222222;
+    --accent: #c8f135;
+    --accent2: #ff6b35;
+    --text: #f0f0f0;
+    --muted: #555;
+    --muted2: #2a2a2a;
+    --leefar: #f5c518;
+    --forchics: #ff6eb4;
+    --catakor: #4d9fff;
+    --boldbuns: #b06eff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* ── TOP NAV ── */
+  .topnav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; color: var(--accent); }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  /* ── SUMMARY STATS ── */
+  .stats-scroll { display: flex; gap: 10px; padding: 14px 16px; overflow-x: auto; scrollbar-width: none; }
+  .stats-scroll::-webkit-scrollbar { display: none; }
+
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    min-width: 120px; flex-shrink: 0;
+  }
+
+  .stat-card.wide { min-width: 140px; }
+  .stat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -1px; color: var(--text); line-height: 1; }
+  .stat-value.green { color: var(--accent); }
+  .stat-delta { font-size: 9px; color: var(--accent); margin-top: 5px; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 16px 14px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+
+  .filter-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; }
+
+  .filter-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 10px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .filter-chip.active { color: var(--text); border-color: var(--muted); background: var(--surface2); }
+  .filter-chip .cdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  .filter-chip.all.active { color: var(--accent); border-color: rgba(200,241,53,0.4); background: rgba(200,241,53,0.07); }
+
+  .sort-pill {
+    margin-left: auto;
+    flex-shrink: 0;
+    padding: 5px 11px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* ── PRODUCT LIST ── */
+  .product-list { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
+
+  .product-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: fadeUp 0.3s ease both;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .product-card:hover { background: var(--surface2); }
+  .product-card:nth-child(1) { animation-delay: 0.04s; }
+  .product-card:nth-child(2) { animation-delay: 0.08s; }
+  .product-card:nth-child(3) { animation-delay: 0.12s; }
+  .product-card:nth-child(4) { animation-delay: 0.16s; }
+  .product-card:nth-child(5) { animation-delay: 0.20s; }
+  .product-card:nth-child(6) { animation-delay: 0.24s; }
+
+  /* colored left border by brand */
+  .product-card { border-left: 3px solid transparent; }
+  .product-card.leefar   { border-left-color: var(--leefar); }
+  .product-card.forchics { border-left-color: var(--forchics); }
+  .product-card.catakor  { border-left-color: var(--catakor); }
+  .product-card.boldbuns { border-left-color: var(--boldbuns); }
+
+  .product-top { display: flex; align-items: center; gap: 12px; padding: 13px 13px 10px; }
+
+  .product-img {
+    width: 52px; height: 52px;
+    border-radius: 8px;
+    background: var(--muted2);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    overflow: hidden;
+  }
+
+  .product-img img { width: 100%; height: 100%; object-fit: cover; }
+
+  .product-right { flex: 1; min-width: 0; }
+
+  .product-name-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+
+  .product-name {
+    font-size: 12px; color: var(--text); line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .product-gmv {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .product-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+
+  .product-id { font-size: 9px; color: var(--muted); }
+
+  .brand-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 9px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .brand-badge.leefar   { background: rgba(245,197,24,0.12); color: var(--leefar); }
+  .brand-badge.forchics { background: rgba(255,110,180,0.12); color: var(--forchics); }
+  .brand-badge.catakor  { background: rgba(77,159,255,0.12); color: var(--catakor); }
+  .brand-badge.boldbuns { background: rgba(176,110,255,0.12); color: var(--boldbuns); }
+
+  /* metrics row */
+  .product-metrics {
+    display: flex;
+    border-top: 1px solid var(--border);
+  }
+
+  .metric-box { flex: 1; padding: 10px 12px; border-right: 1px solid var(--border); text-align: center; }
+  .metric-box:last-child { border-right: none; }
+  .metric-label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
+  .metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: -0.5px; color: var(--text); }
+  .metric-val.green { color: var(--accent); }
+  .metric-val.dim { color: var(--muted); }
+  .metric-sub { font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+  /* video thumbnails strip */
+  .video-strip {
+    display: flex; gap: 6px;
+    padding: 10px 13px;
+    border-top: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .video-strip::-webkit-scrollbar { display: none; }
+
+  .strip-label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 0; align-self: center; white-space: nowrap; flex-shrink: 0; }
+
+  .strip-thumb {
+    width: 36px; height: 48px;
+    border-radius: 5px;
+    background: var(--muted2);
+    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .strip-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .strip-thumb .strip-views {
+    position: absolute; bottom: 2px; left: 0; right: 0;
+    text-align: center;
+    font-size: 7px;
+    color: #fff;
+    background: rgba(0,0,0,0.6);
+    padding: 1px 2px;
+  }
+
+  .strip-more {
+    width: 36px; height: 48px;
+    border-radius: 5px;
+    background: var(--muted2);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+  }
+
+  /* dead product flag */
+  .dead-flag {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 13px;
+    border-top: 1px solid var(--border);
+    font-size: 10px;
+    color: var(--accent2);
+    background: rgba(255,107,53,0.05);
+  }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 0; cursor: pointer; color: var(--muted); font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.15s; }
+  .nav-btn.active { color: var(--accent); }
+  .nav-icon { font-size: 18px; line-height: 1; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── DESKTOP ── */
+  @media (min-width: 768px) {
+    body { padding-bottom: 0; }
+    .bottom-nav { display: none; }
+    .layout { display: grid; grid-template-columns: 200px 1fr; min-height: 100vh; }
+
+    .sidebar-desktop {
+      display: flex !important; flex-direction: column;
+      background: var(--surface); border-right: 1px solid var(--border);
+      position: sticky; top: 0; height: 100vh; padding: 24px 0;
+    }
+
+    .sidebar-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: var(--accent); padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+    .sidebar-nav { padding: 16px 0; }
+    .sidebar-item { display: flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 11px; color: var(--muted); cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.15s; }
+    .sidebar-item.active { color: var(--accent); background: rgba(200,241,53,0.06); border-left: 2px solid var(--accent); }
+
+    .topnav { display: none; }
+    .desktop-topbar {
+      display: flex !important; align-items: center; justify-content: space-between;
+      padding: 18px 28px; border-bottom: 1px solid var(--border);
+      background: var(--bg); position: sticky; top: 0; z-index: 50;
+    }
+
+    .stats-scroll { padding: 16px 28px; }
+    .stat-card { min-width: 0; flex: 1; }
+    .filter-bar { padding: 0 28px 14px; }
+    .product-list { padding: 0 28px; }
+  }
+
+  .sidebar-desktop { display: none; }
+  .desktop-topbar { display: none; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- DESKTOP SIDEBAR -->
+  <div class="sidebar-desktop">
+    <div class="sidebar-logo">TRAKR</div>
+    <div class="sidebar-nav">
+      <div class="sidebar-item">▦ Dashboard</div>
+      <div class="sidebar-item">◈ All Videos</div>
+      <div class="sidebar-item active">◉ Products</div>
+      <div class="sidebar-item">◎ Reports</div>
+    </div>
+  </div>
+
+  <div class="main-desktop">
+
+    <!-- MOBILE TOP NAV -->
+    <div class="topnav">
+      <div class="logo">TRAKR</div>
+      <div class="page-title">Products</div>
+      <div style="width:50px"></div>
+    </div>
+
+    <!-- DESKTOP TOPBAR -->
+    <div class="desktop-topbar">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;letter-spacing:-0.3px;">Products</div>
+      <div style="font-size:10px;color:var(--muted);">All retainer clients · April 2026</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-scroll">
+      <div class="stat-card"><div class="stat-label">Total Products</div><div class="stat-value">18</div><div class="stat-delta">across 4 clients</div></div>
+      <div class="stat-card wide"><div class="stat-label">Total GMV</div><div class="stat-value green">$142K</div><div class="stat-delta">↑ 22% vs last mo</div></div>
+      <div class="stat-card"><div class="stat-label">Tagged Videos</div><div class="stat-value">91</div><div class="stat-delta">of 120 total</div></div>
+      <div class="stat-card"><div class="stat-label">Dead Products</div><div class="stat-value" style="color:var(--accent2)">4</div><div class="stat-delta" style="color:var(--accent2)">0 videos tagged</div></div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-label">Client:</div>
+      <div class="filter-chip all active">All</div>
+      <div class="filter-chip"><div class="cdot" style="background:var(--leefar)"></div>Leefar</div>
+      <div class="filter-chip"><div class="cdot" style="background:var(--forchics)"></div>Forchics</div>
+      <div class="filter-chip"><div class="cdot" style="background:var(--catakor)"></div>Cata-kor</div>
+      <div class="filter-chip"><div class="cdot" style="background:var(--boldbuns)"></div>Bold Buns</div>
+      <div class="sort-pill">Sort: GMV ▾</div>
+    </div>
+
+    <!-- PRODUCT CARDS -->
+    <div class="product-list">
+
+      <!-- Product 1 — Leefar top performer -->
+      <div class="product-card leefar">
+        <div class="product-top">
+          <div class="product-img">💊</div>
+          <div class="product-right">
+            <div class="product-name-row">
+              <div class="product-name">Leefar Cutting Mix — 3 Pack Bundle</div>
+              <div class="product-gmv">$48.2K</div>
+            </div>
+            <div class="product-meta">
+              <div class="product-id">ID: 17291234567</div>
+              <div class="brand-badge leefar">Leefar</div>
+            </div>
+          </div>
+        </div>
+        <div class="product-metrics">
+          <div class="metric-box"><div class="metric-label">Videos</div><div class="metric-val">14</div></div>
+          <div class="metric-box"><div class="metric-label">Orders</div><div class="metric-val">321</div></div>
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">11.4M</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val green">$48.2K</div></div>
+        </div>
+        <div class="video-strip">
+          <div class="strip-label">Videos</div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">2.2M</div></div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">4.7M</div></div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">880K</div></div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">1.1M</div></div>
+          <div class="strip-more">+10</div>
+        </div>
+      </div>
+
+      <!-- Product 2 — Forchics -->
+      <div class="product-card forchics">
+        <div class="product-top">
+          <div class="product-img">✨</div>
+          <div class="product-right">
+            <div class="product-name-row">
+              <div class="product-name">Forchics Lash Serum — Advanced Formula</div>
+              <div class="product-gmv">$31.7K</div>
+            </div>
+            <div class="product-meta">
+              <div class="product-id">ID: 17298765432</div>
+              <div class="brand-badge forchics">Forchics</div>
+            </div>
+          </div>
+        </div>
+        <div class="product-metrics">
+          <div class="metric-box"><div class="metric-label">Videos</div><div class="metric-val">11</div></div>
+          <div class="metric-box"><div class="metric-label">Orders</div><div class="metric-val">212</div></div>
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">8.9M</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val green">$31.7K</div></div>
+        </div>
+        <div class="video-strip">
+          <div class="strip-label">Videos</div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">3.1M</div></div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">1.8M</div></div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">990K</div></div>
+          <div class="strip-more">+8</div>
+        </div>
+      </div>
+
+      <!-- Product 3 — Cata-kor -->
+      <div class="product-card catakor">
+        <div class="product-top">
+          <div class="product-img">🧴</div>
+          <div class="product-right">
+            <div class="product-name-row">
+              <div class="product-name">Cata-kor PDRN Pink Collagen Volume Balm</div>
+              <div class="product-gmv">$22.4K</div>
+            </div>
+            <div class="product-meta">
+              <div class="product-id">ID: 17295480905</div>
+              <div class="brand-badge catakor">Cata-kor</div>
+            </div>
+          </div>
+        </div>
+        <div class="product-metrics">
+          <div class="metric-box"><div class="metric-label">Videos</div><div class="metric-val">9</div></div>
+          <div class="metric-box"><div class="metric-label">Orders</div><div class="metric-val">149</div></div>
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">6.2M</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val green">$22.4K</div></div>
+        </div>
+        <div class="video-strip">
+          <div class="strip-label">Videos</div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">2.8M</div></div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">1.4M</div></div>
+          <div class="strip-more">+7</div>
+        </div>
+      </div>
+
+      <!-- Product 4 — Bold Buns -->
+      <div class="product-card boldbuns">
+        <div class="product-top">
+          <div class="product-img">💜</div>
+          <div class="product-right">
+            <div class="product-name-row">
+              <div class="product-name">Bold Buns Hair Growth Oil — Original</div>
+              <div class="product-gmv">$18.9K</div>
+            </div>
+            <div class="product-meta">
+              <div class="product-id">ID: 17293344556</div>
+              <div class="brand-badge boldbuns">Bold Buns</div>
+            </div>
+          </div>
+        </div>
+        <div class="product-metrics">
+          <div class="metric-box"><div class="metric-label">Videos</div><div class="metric-val">7</div></div>
+          <div class="metric-box"><div class="metric-label">Orders</div><div class="metric-val">126</div></div>
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">4.1M</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val green">$18.9K</div></div>
+        </div>
+        <div class="video-strip">
+          <div class="strip-label">Videos</div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">1.9M</div></div>
+          <div class="strip-thumb"><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=80&h=120&fit=crop&crop=face" /><div class="strip-views">880K</div></div>
+          <div class="strip-more">+5</div>
+        </div>
+      </div>
+
+      <!-- Product 5 — low performer flag -->
+      <div class="product-card leefar">
+        <div class="product-top">
+          <div class="product-img">💊</div>
+          <div class="product-right">
+            <div class="product-name-row">
+              <div class="product-name">Leefar Cutting Mix — Single Pack</div>
+              <div class="product-gmv" style="color:var(--muted)">$840</div>
+            </div>
+            <div class="product-meta">
+              <div class="product-id">ID: 17291234568</div>
+              <div class="brand-badge leefar">Leefar</div>
+            </div>
+          </div>
+        </div>
+        <div class="product-metrics">
+          <div class="metric-box"><div class="metric-label">Videos</div><div class="metric-val">8</div></div>
+          <div class="metric-box"><div class="metric-label">Orders</div><div class="metric-val">6</div></div>
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val">3.2M</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val dim">$840</div></div>
+        </div>
+        <div class="dead-flag">⚠ 3.2M views but only $840 GMV — low conversion rate</div>
+      </div>
+
+      <!-- Product 6 — dead product (no videos) -->
+      <div class="product-card forchics">
+        <div class="product-top">
+          <div class="product-img" style="opacity:0.4">✨</div>
+          <div class="product-right">
+            <div class="product-name-row">
+              <div class="product-name" style="color:var(--muted)">Forchics Brow Serum — Enhancing Formula</div>
+              <div class="product-gmv" style="color:var(--muted)">$0</div>
+            </div>
+            <div class="product-meta">
+              <div class="product-id">ID: 17298765433</div>
+              <div class="brand-badge forchics">Forchics</div>
+            </div>
+          </div>
+        </div>
+        <div class="product-metrics">
+          <div class="metric-box"><div class="metric-label">Videos</div><div class="metric-val dim">0</div></div>
+          <div class="metric-box"><div class="metric-label">Orders</div><div class="metric-val dim">0</div></div>
+          <div class="metric-box"><div class="metric-label">Views</div><div class="metric-val dim">—</div></div>
+          <div class="metric-box"><div class="metric-label">GMV</div><div class="metric-val dim">$0</div></div>
+        </div>
+        <div class="dead-flag">⚠ No videos tagged this product — added to list but never used</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-btn"><div class="nav-icon">▦</div><div>Dash</div></div>
+  <div class="nav-btn"><div class="nav-icon">◈</div><div>Videos</div></div>
+  <div class="nav-btn active"><div class="nav-icon">◉</div><div>Products</div></div>
+  <div class="nav-btn"><div class="nav-icon">◎</div><div>Reports</div></div>
+</div>
+
+<script>
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
