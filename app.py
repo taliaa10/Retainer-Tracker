@@ -234,6 +234,14 @@ def start_period(client_id):
     return redirect(url_for('settings'))
 
 
+@app.route('/settings/periods/<int:period_id>/update', methods=['POST'])
+def update_period(period_id):
+    period_start = request.form.get('period_start')
+    period_end = request.form.get('period_end')
+    db.update_period(period_id, period_start, period_end)
+    return redirect(url_for('settings'))
+
+
 @app.route('/settings/periods/<int:period_id>/complete', methods=['POST'])
 def complete_period(period_id):
     db.complete_period(period_id)

@@ -176,12 +176,21 @@
           <div class="client-section-title">Retainer Period</div>
 
           {% if cd.active_period %}
-          <div class="period-info">
-            <div class="period-info-row">
-              <span class="period-label">Current Period</span>
-              <span class="period-val">{{ cd.active_period.period_start | datefmt }} → {{ cd.active_period.period_end | datefmt }}</span>
+          <form method="POST" action="/settings/periods/{{ cd.active_period.id }}/update">
+            <div class="form-row" style="margin-bottom:8px;">
+              <div class="form-group">
+                <label>Period Start</label>
+                <input type="date" name="period_start" value="{{ cd.active_period.period_start }}" required>
+              </div>
+              <div class="form-group">
+                <label>Period End</label>
+                <input type="date" name="period_end" value="{{ cd.active_period.period_end }}" required>
+              </div>
+              <div style="display:flex;align-items:flex-end;">
+                <button type="submit" class="btn btn-primary">Save</button>
+              </div>
             </div>
-          </div>
+          </form>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <form method="POST" action="/settings/periods/{{ cd.active_period.id }}/complete">
               <button type="submit" class="btn btn-secondary">✓ Mark Complete</button>

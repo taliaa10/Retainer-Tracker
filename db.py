@@ -253,6 +253,13 @@ def start_period(client_id, period_start):
     )
 
 
+def update_period(period_id, period_start, period_end):
+    execute(
+        "UPDATE retainer_periods SET period_start=%s, period_end=%s WHERE id=%s",
+        (period_start, period_end, period_id)
+    )
+
+
 def complete_period(period_id):
     execute(
         "UPDATE retainer_periods SET status='completed' WHERE id=%s",
