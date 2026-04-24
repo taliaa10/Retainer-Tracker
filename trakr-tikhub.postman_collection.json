@@ -1,0 +1,133 @@
+{
+  "info": {
+    "name": "Trakr — TikHub API",
+    "_postman_id": "trakr-tikhub-collection",
+    "description": "All TikHub API calls used by the Trakr app. Set TIKHUB_API_KEY and TIKTOK_COOKIE in your Postman environment variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.tikhub.io",
+      "type": "string"
+    },
+    {
+      "key": "tikhub_api_key",
+      "value": "YOUR_TIKHUB_API_KEY",
+      "type": "string"
+    },
+    {
+      "key": "tiktok_cookie",
+      "value": "YOUR_TIKTOK_COOKIE",
+      "type": "string"
+    },
+    {
+      "key": "creator_handle",
+      "value": "ms.lia_love",
+      "type": "string"
+    },
+    {
+      "key": "video_id",
+      "value": "7496499484705246507",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "YOUR_PRODUCT_ID",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Fetch Creator Videos (main sync)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tikhub_api_key}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/tiktok/app/v3/fetch_user_post_videos?unique_id={{creator_handle}}&count=30&cursor=0",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "tiktok", "app", "v3", "fetch_user_post_videos"],
+          "query": [
+            { "key": "unique_id", "value": "{{creator_handle}}" },
+            { "key": "count", "value": "30" },
+            { "key": "cursor", "value": "0" }
+          ]
+        },
+        "description": "Fetches the creator's recent videos. This is what the Sync button triggers first. Look for aweme_list in the response."
+      }
+    },
+    {
+      "name": "2. Fetch Single Video Detail (product tag detection)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tikhub_api_key}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/tiktok/app/v3/fetch_one_video?aweme_id={{video_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "tiktok", "app", "v3", "fetch_one_video"],
+          "query": [
+            { "key": "aweme_id", "value": "{{video_id}}" }
+          ]
+        },
+        "description": "Fetches full detail for a single video. Used to detect product stickers (tagged_product_id) that the list endpoint misses."
+      }
+    },
+    {
+      "name": "3. Fetch Product Detail (name lookup)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tikhub_api_key}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/tiktok/app/v3/fetch_product_detail?product_id={{product_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "tiktok", "app", "v3", "fetch_product_detail"],
+          "query": [
+            { "key": "product_id", "value": "{{product_id}}" }
+          ]
+        },
+        "description": "Looks up the product name from a product ID. Called when you add a new product in Settings."
+      }
+    },
+    {
+      "name": "4. Get Video GMV + Orders (Creator Center)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tikhub_api_key}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cookie\": \"{{tiktok_cookie}}\",\n  \"item_id\": \"{{video_id}}\",\n  \"product_id\": \"{{product_id}}\",\n  \"start_date\": \"04-01-2025\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/tiktok/creator/get_video_to_product_stats",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "tiktok", "creator", "get_video_to_product_stats"]
+        },
+        "description": "Returns real GMV and order counts for a specific video + product combination. Requires your TikTok session cookie. start_date must be MM-DD-YYYY and determines which calendar month's data is returned."
+      }
+    }
+  ]
+}
