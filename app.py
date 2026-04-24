@@ -97,12 +97,15 @@ def dashboard():
     client_id = request.args.get('client', type=int)
     active = next((c for c in clients if c['id'] == client_id), clients[0])
 
-    stats = db.get_client_stats(active['id'])
+    active_period = db.get_active_period(active['id'])
+    stats = db.get_client_stats(
+        active['id'],
+        period_start=active_period.get('period_start') if active_period else None,
+    )
     filter_type = request.args.get('filter')
     videos = db.get_client_videos(active['id'], filter_type=filter_type, limit=30)
     top_products = db.get_top_products(active['id'])
     recent = db.get_recent_activity(active['id'])
-    active_period = db.get_active_period(active['id'])
     today = date.today()
 
     return render_template(
@@ -266,6 +269,16 @@ def trigger_sync_client(client_id):
         return jsonify({'status': 'ok', 'videos_fetched': count})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/videos/<video_id>/assign', methods=['POST'])
+def assign_video(video_id):
+    data = request.get_json()
+    client_id = data.get('client_id') if data else None
+    if not client_id:
+        return jsonify({'status': 'error', 'message': 'client_id required'}), 400
+    db.assign_video_to_client(video_id, int(client_id))
+    return jsonify({'status': 'ok'})
 
 
 # ── STARTUP ───────────────────────────────────────────────────────────────────

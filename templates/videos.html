@@ -63,6 +63,7 @@
   .totals-row td { background: var(--surface) !important; border-top: 2px solid var(--border) !important; font-size: 10px; color: var(--muted); padding: 9px 12px !important; }
   .totals-row td.total-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent); text-align: right; }
   .totals-row td.total-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .assign-select { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--accent2); font-family: 'DM Mono', monospace; font-size: 9px; padding: 3px 6px; cursor: pointer; outline: none; }
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
 
@@ -100,6 +101,8 @@
   {% endfor %}
   <a href="/videos?{% if active_client_id %}client={{ active_client_id }}&{% endif %}filter=untagged"
      class="fchip {% if filter_type == 'untagged' %}active{% endif %}">⚠ No Tag</a>
+  <a href="/videos?filter=unassigned"
+     class="fchip {% if filter_type == 'unassigned' %}active{% endif %}">⊘ Unassigned</a>
 </div>
 
 <div class="table-meta">
@@ -150,7 +153,7 @@
           </div>
         </td>
         <td class="td-brand">
-          <div class="brand-bar" style="background:{{ v.brand_color }};"></div>
+          <div class="brand-bar" style="background:{{ v.brand_color or 'var(--muted2)' }};"></div>
         </td>
         <td class="td-date">{{ v.posted_at | datefmt }}</td>
         <td class="td-desc">{{ v.description or '(no description)' }}</td>
@@ -171,7 +174,16 @@
         <td class="td-num {% if v.gmv %}green{% else %}dim{% endif %}">{{ v.gmv | gmv }}</td>
         <td class="td-num {% if not v.orders %}dim{% endif %}">{{ v.orders or '—' }}</td>
         <td class="td-status">
+          {% if v.client_id %}
           <div class="status-dot {% if v.tagged_product_id %}live{% else %}notag{% endif %}"></div>
+          {% else %}
+          <select class="assign-select" onchange="assignVideo('{{ v.video_id }}', this)">
+            <option value="">assign…</option>
+            {% for c in clients %}
+            <option value="{{ c.id }}">{{ c.brand_name }}</option>
+            {% endfor %}
+          </select>
+          {% endif %}
         </td>
       </tr>
       {% endfor %}
@@ -193,4 +205,22 @@
   {% endif %}
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+function assignVideo(videoId, selectEl) {
+  const clientId = parseInt(selectEl.value);
+  if (!clientId) return;
+  selectEl.disabled = true;
+  fetch(`/api/videos/${videoId}/assign`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({client_id: clientId})
+  }).then(r => r.json()).then(d => {
+    if (d.status === 'ok') location.reload();
+    else { selectEl.disabled = false; alert('Failed to assign video'); }
+  }).catch(() => { selectEl.disabled = false; });
+}
+</script>
 {% endblock %}

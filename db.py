@@ -177,7 +177,8 @@ def get_all_clients_with_period_stats():
             COALESCE(
                 (SELECT COUNT(*) FROM videos v
                  WHERE v.client_id = c.id
-                   AND v.posted_at >= rp.period_start),
+                   AND v.posted_at >= rp.period_start
+                   AND v.posted_at <= rp.period_end),
                 0
             )                 AS posts_completed,
             (SELECT MAX(sl.synced_at) FROM sync_log sl
@@ -364,7 +365,9 @@ def get_client_videos(client_id, filter_type=None, limit=30):
 def get_all_videos(client_id=None, filter_type=None, limit=100):
     where_clauses = []
     params = []
-    if client_id:
+    if filter_type == 'unassigned':
+        where_clauses.append("v.client_id IS NULL")
+    elif client_id:
         where_clauses.append("v.client_id = %s")
         params.append(client_id)
     if filter_type == 'tagged':
@@ -380,7 +383,7 @@ def get_all_videos(client_id=None, filter_type=None, limit=100):
             vm.tagged_product_id,
             p.product_name
         FROM videos v
-        JOIN clients c ON c.id = v.client_id
+        LEFT JOIN clients c ON c.id = v.client_id
         LEFT JOIN video_metrics vm ON vm.video_id = v.video_id
         LEFT JOIN products p ON p.product_id = vm.tagged_product_id AND p.client_id = v.client_id
         {where}
@@ -389,7 +392,21 @@ def get_all_videos(client_id=None, filter_type=None, limit=100):
     """, params + [limit])
 
 
-def get_client_stats(client_id):
+def get_client_stats(client_id, period_start=None):
+    if period_start:
+        return fetchone("""
+            SELECT
+                COUNT(DISTINCT CASE WHEN v.posted_at >= %s::date THEN v.id END)                               AS video_count,
+                COUNT(DISTINCT CASE WHEN vm.tagged_product_id IS NOT NULL
+                                     AND v.posted_at >= %s::date THEN v.id END)                               AS tagged_count,
+                COALESCE(SUM(vm.views), 0)                                                                    AS total_views,
+                COALESCE(SUM(vm.gmv), 0)                                                                      AS total_gmv,
+                COUNT(DISTINCT p.id)                                                                          AS product_count
+            FROM videos v
+            LEFT JOIN video_metrics vm ON vm.video_id = v.video_id
+            LEFT JOIN products p ON p.client_id = v.client_id AND p.is_active = TRUE
+            WHERE v.client_id = %s
+        """, (period_start, period_start, client_id))
     return fetchone("""
         SELECT
             COUNT(DISTINCT v.id)                                             AS video_count,
@@ -438,6 +455,10 @@ def get_recent_activity(client_id, limit=8):
         ORDER BY v.posted_at DESC NULLS LAST
         LIMIT %s
     """, (client_id, limit))
+
+
+def assign_video_to_client(video_id, client_id):
+    execute("UPDATE videos SET client_id=%s WHERE video_id=%s", (client_id, video_id))
 
 
 # ── SYNC ──────────────────────────────────────────────────────────────────────
