@@ -348,9 +348,11 @@
       {% for p in top_products %}
       <div class="product-rank">
         <div class="rank-num {% if loop.index <= 2 %}top{% endif %}">{{ loop.index }}</div>
-        <div class="rank-img">📦</div>
+        <a href="https://www.tiktok.com/view/product/{{ p.product_id }}" target="_blank" rel="noopener" class="rank-img">📦</a>
         <div class="rank-info">
-          <div class="rank-name">{{ p.product_name or p.product_id }}</div>
+          <a href="https://www.tiktok.com/view/product/{{ p.product_id }}" target="_blank" rel="noopener" style="color:inherit;">
+            <div class="rank-name">{{ p.product_name or p.product_id }}</div>
+          </a>
           <div class="rank-stats">{{ p.total_orders or 0 }} orders · {{ p.video_count or 0 }} videos</div>
         </div>
         <div class="rank-gmv">{{ p.total_gmv | gmv }}</div>

@@ -142,15 +142,17 @@
       {% set total_orders.v = total_orders.v + (v.orders or 0) %}
       <tr>
         <td class="td-thumb">
-          <div class="thumb-wrap">
-            {% if v.cover_url %}
-            <img src="{{ v.cover_url }}" alt=""
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-            <div class="thumb-fallback" style="display:none">🎬</div>
-            {% else %}
-            <div class="thumb-fallback">🎬</div>
-            {% endif %}
-          </div>
+          <a href="https://www.tiktok.com/@{{ creator_handle }}/video/{{ v.video_id }}" target="_blank" rel="noopener">
+            <div class="thumb-wrap">
+              {% if v.cover_url %}
+              <img src="{{ v.cover_url }}" alt=""
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+              <div class="thumb-fallback" style="display:none">🎬</div>
+              {% else %}
+              <div class="thumb-fallback">🎬</div>
+              {% endif %}
+            </div>
+          </a>
         </td>
         <td class="td-brand">
           <div class="brand-bar" style="background:{{ v.brand_color or 'var(--muted2)' }};"></div>

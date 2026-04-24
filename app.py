@@ -154,12 +154,14 @@ def videos():
     filter_type = request.args.get('filter')
     clients = db.get_all_clients()
     all_videos = db.get_all_videos(client_id=client_id, filter_type=filter_type)
+    creator_handle = db.get_setting('creator_handle', '')
     return render_template(
         'videos.html',
         videos=all_videos,
         clients=clients,
         active_client_id=client_id,
         filter_type=filter_type,
+        creator_handle=creator_handle,
     )
 
 
