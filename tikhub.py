@@ -23,6 +23,19 @@ def _get(path, params, retries=2):
             time.sleep(2 ** attempt)
 
 
+def _post(path, body, retries=2):
+    url = f"{TIKHUB_BASE}{path}"
+    for attempt in range(retries + 1):
+        try:
+            resp = requests.post(url, headers=_headers(), json=body, timeout=30)
+            resp.raise_for_status()
+            return resp.json()
+        except requests.RequestException as e:
+            if attempt == retries:
+                raise
+            time.sleep(2 ** attempt)
+
+
 def fetch_user_videos(username, count=30, cursor=0):
     """Fetch recent videos for a TikTok username."""
     return _get(
@@ -144,3 +157,43 @@ def parse_video_detail(data):
             if product_ids:
                 return str(product_ids[0])
     return None
+
+
+def fetch_video_product_stats(item_id, product_id, start_date):
+    """Fetch per-video GMV/orders from Creator Center.
+
+    start_date format: MM-DD-YYYY (e.g. "04-01-2025")
+    Returns raw TikHub response.
+    """
+    cookie = os.environ.get("TIKTOK_COOKIE", "")
+    return _post(
+        "/api/v1/tiktok/creator/get_video_to_product_stats",
+        {
+            "cookie": cookie,
+            "item_id": str(item_id),
+            "product_id": str(product_id),
+            "start_date": start_date,
+        }
+    )
+
+
+def parse_video_product_stats(data):
+    """Sum timed_stats segments → {gmv, orders, product_views, product_clicks}."""
+    segments = data.get("data", {}).get("segments") or []
+    gmv = 0.0
+    orders = 0
+    product_views = 0
+    product_clicks = 0
+    for seg in segments:
+        for ts in (seg.get("timed_stats") or []):
+            s = ts.get("stats") or {}
+            gmv += float((s.get("product_revenue") or {}).get("amount") or 0)
+            orders += int(s.get("order_cnt") or 0)
+            product_views += int(s.get("product_view_cnt") or 0)
+            product_clicks += int(s.get("product_click_cnt") or 0)
+    return {
+        "gmv": round(gmv, 2),
+        "orders": orders,
+        "product_views": product_views,
+        "product_clicks": product_clicks,
+    }

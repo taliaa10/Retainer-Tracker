@@ -273,6 +273,15 @@ def trigger_sync_client(client_id):
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
+@app.route('/api/sync/gmv', methods=['POST'])
+def trigger_sync_gmv():
+    try:
+        count = sync.sync_gmv()
+        return jsonify({'status': 'ok', 'videos_enriched': count})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 @app.route('/api/videos/<video_id>/assign', methods=['POST'])
 def assign_video(video_id):
     data = request.get_json()

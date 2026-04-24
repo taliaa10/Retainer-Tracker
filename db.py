@@ -461,6 +461,24 @@ def assign_video_to_client(video_id, client_id):
     execute("UPDATE videos SET client_id=%s WHERE video_id=%s", (client_id, video_id))
 
 
+def get_tagged_videos_for_gmv():
+    """Return all videos that have a product tag, for GMV enrichment."""
+    return fetchall("""
+        SELECT v.video_id, vm.tagged_product_id, v.posted_at
+        FROM videos v
+        JOIN video_metrics vm ON vm.video_id = v.video_id
+        WHERE vm.tagged_product_id IS NOT NULL
+        ORDER BY v.posted_at DESC
+    """)
+
+
+def update_video_gmv(video_id, gmv, orders):
+    execute(
+        "UPDATE video_metrics SET gmv=%s, orders=%s WHERE video_id=%s",
+        (gmv, orders, video_id)
+    )
+
+
 # ── SYNC ──────────────────────────────────────────────────────────────────────
 
 def upsert_video(client_id, video_id, description, cover_url, duration, posted_at):

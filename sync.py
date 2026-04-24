@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 from datetime import datetime, timezone
@@ -97,9 +98,48 @@ def sync_creator():
         raise
 
 
+def sync_gmv():
+    """Enrich tagged videos with real GMV/orders from Creator Center.
+    Requires TIKTOK_COOKIE env var to be set."""
+    if not os.environ.get("TIKTOK_COOKIE"):
+        logger.warning("TIKTOK_COOKIE not set — skipping GMV sync")
+        return 0
+
+    tagged = db.get_tagged_videos_for_gmv()
+    logger.info(f"GMV sync: enriching {len(tagged)} tagged videos")
+
+    enriched = 0
+    for v in tagged:
+        posted_at = v["posted_at"]
+        if posted_at and hasattr(posted_at, "strftime"):
+            start_date = posted_at.strftime("%m-01-%Y")
+        else:
+            start_date = datetime.now().strftime("%m-01-%Y")
+
+        try:
+            raw = tikhub.fetch_video_product_stats(
+                item_id=v["video_id"],
+                product_id=v["tagged_product_id"],
+                start_date=start_date,
+            )
+            stats = tikhub.parse_video_product_stats(raw)
+            db.update_video_gmv(v["video_id"], stats["gmv"], stats["orders"])
+            enriched += 1
+            time.sleep(0.5)
+        except Exception as e:
+            logger.warning(f"GMV sync failed for video {v['video_id']}: {e}")
+
+    logger.info(f"GMV sync complete: {enriched}/{len(tagged)} videos enriched")
+    return enriched
+
+
 def sync_all():
     """Called by APScheduler."""
     try:
         sync_creator()
     except Exception as e:
         logger.error(f"Scheduled sync failed: {e}")
+    try:
+        sync_gmv()
+    except Exception as e:
+        logger.error(f"Scheduled GMV sync failed: {e}")
