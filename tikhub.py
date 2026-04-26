@@ -1,3 +1,4 @@
+import json
 import os
 import time
 import requests
@@ -109,24 +110,7 @@ def parse_videos(data):
         likes = stats.get("digg_count") or stats.get("like_count") or 0
         comments = stats.get("comment_count") or 0
 
-        # Product tag — look in stickersOnItem
-        tagged_product_id = None
-        stickers = item.get("stickersOnItem") or item.get("stickers_on_item") or []
-        for sticker in stickers:
-            stype = sticker.get("stickerType") or sticker.get("sticker_type")
-            if stype == 2:  # product sticker type
-                product_ids = sticker.get("productIds") or sticker.get("product_ids") or []
-                if product_ids:
-                    tagged_product_id = str(product_ids[0])
-                    break
-
-        # Fallback: check anchor_info for product links
-        if not tagged_product_id:
-            anchors = item.get("anchor_info", {}).get("icon_field_list") or []
-            for anchor in anchors:
-                if anchor.get("type") == "product":
-                    tagged_product_id = str(anchor.get("product_id", ""))
-                    break
+        tagged_product_id = _extract_product_id(item)
 
         results.append({
             "video_id": video_id,
@@ -143,20 +127,50 @@ def parse_videos(data):
     return results
 
 
+def _extract_product_id(item):
+    """Extract the first tagged product ID from a video item dict.
+
+    TikHub returns product stickers in anchors[].extra, which is a JSON string
+    containing a list of objects. Product entries have type==33 and carry the
+    product ID in the 'id' field.  We also check the older stickersOnItem
+    structure as a fallback.
+    """
+    # Primary: anchors array (real API response format)
+    for anchor in (item.get("anchors") or []):
+        extra_raw = anchor.get("extra")
+        if not extra_raw:
+            continue
+        try:
+            entries = json.loads(extra_raw) if isinstance(extra_raw, str) else extra_raw
+            for entry in (entries if isinstance(entries, list) else []):
+                if entry.get("type") == 33 and entry.get("id"):
+                    return str(entry["id"])
+        except (ValueError, TypeError):
+            pass
+
+    # Fallback: stickersOnItem (older / alternate response shape)
+    for sticker in (item.get("stickersOnItem") or item.get("stickers_on_item") or []):
+        stype = sticker.get("stickerType") or sticker.get("sticker_type")
+        if stype == 2:
+            product_ids = sticker.get("productIds") or sticker.get("product_ids") or []
+            if product_ids:
+                return str(product_ids[0])
+
+    # Fallback: anchor_info.icon_field_list
+    for anchor in (item.get("anchor_info", {}).get("icon_field_list") or []):
+        if anchor.get("type") == "product" and anchor.get("product_id"):
+            return str(anchor["product_id"])
+
+    return None
+
+
 def parse_video_detail(data):
     """Parse fetch_one_video response for product tag."""
     detail = (
         data.get("data", {}).get("aweme_detail")
         or data.get("data", {})
     )
-    stickers = detail.get("stickersOnItem") or detail.get("stickers_on_item") or []
-    for sticker in stickers:
-        stype = sticker.get("stickerType") or sticker.get("sticker_type")
-        if stype == 2:
-            product_ids = sticker.get("productIds") or sticker.get("product_ids") or []
-            if product_ids:
-                return str(product_ids[0])
-    return None
+    return _extract_product_id(detail)
 
 
 def fetch_video_product_stats(item_id, product_id, start_date):
