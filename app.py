@@ -284,28 +284,60 @@ def trigger_sync_gmv():
 
 @app.route('/api/debug/fetch', methods=['GET'])
 def debug_fetch():
+    import requests as _requests
     handle = db.get_setting('creator_handle')
     if not handle:
         return jsonify({'error': 'no creator_handle set'}), 400
-    cursor = request.args.get('cursor', 0, type=int)
+
+    def _fetch(params):
+        url = f"{tikhub.TIKHUB_BASE}/api/v1/tiktok/app/v3/fetch_user_post_videos"
+        resp = _requests.get(url, headers=tikhub._headers(), params=params, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+
     try:
-        raw = tikhub.fetch_user_videos(handle, count=30, cursor=cursor)
-        data = raw.get('data', {})
-        aweme_list = data.get('aweme_list') or data.get('videos') or []
-        parsed = tikhub.parse_videos(raw)
-        # All non-list fields from data so we can spot any pagination keys
-        pagination_fields = {
-            k: v for k, v in data.items()
-            if not isinstance(v, list) and k not in ('aweme_list', 'videos')
+        # Page 1
+        p1 = _fetch({'unique_id': handle, 'count': 10})
+        d1 = p1.get('data', {})
+        ids1 = [str(v.get('aweme_id') or v.get('id')) for v in (d1.get('aweme_list') or [])]
+        max_cursor_ms = d1.get('max_cursor')
+
+        results = {
+            'page1': {
+                'video_ids': ids1,
+                'has_more': d1.get('has_more'),
+                'max_cursor': max_cursor_ms,
+                'min_cursor': d1.get('min_cursor'),
+            }
         }
-        return jsonify({
-            'handle': handle,
-            'cursor_sent': cursor,
-            'raw_video_count': len(aweme_list),
-            'parsed_video_count': len(parsed),
-            'all_data_fields': pagination_fields,
-            'video_ids': [v['video_id'] for v in parsed],
-        })
+
+        if max_cursor_ms:
+            # Try A: pass max_cursor as-is (ms)
+            p2a = _fetch({'unique_id': handle, 'count': 10, 'cursor': max_cursor_ms})
+            d2a = p2a.get('data', {})
+            ids2a = [str(v.get('aweme_id') or v.get('id')) for v in (d2a.get('aweme_list') or [])]
+            results['page2_cursor_ms'] = {
+                'cursor_sent': max_cursor_ms,
+                'video_ids': ids2a,
+                'same_as_page1': ids2a == ids1,
+                'has_more': d2a.get('has_more'),
+                'max_cursor': d2a.get('max_cursor'),
+            }
+
+            # Try B: pass max_cursor in seconds
+            max_cursor_s = max_cursor_ms // 1000
+            p2b = _fetch({'unique_id': handle, 'count': 10, 'cursor': max_cursor_s})
+            d2b = p2b.get('data', {})
+            ids2b = [str(v.get('aweme_id') or v.get('id')) for v in (d2b.get('aweme_list') or [])]
+            results['page2_cursor_sec'] = {
+                'cursor_sent': max_cursor_s,
+                'video_ids': ids2b,
+                'same_as_page1': ids2b == ids1,
+                'has_more': d2b.get('has_more'),
+                'max_cursor': d2b.get('max_cursor'),
+            }
+
+        return jsonify(results)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
