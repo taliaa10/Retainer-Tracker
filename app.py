@@ -312,30 +312,24 @@ def debug_fetch():
         }
 
         if max_cursor_ms:
-            # Try A: pass max_cursor as-is (ms)
-            p2a = _fetch({'unique_id': handle, 'count': 10, 'cursor': max_cursor_ms})
-            d2a = p2a.get('data', {})
-            ids2a = [str(v.get('aweme_id') or v.get('id')) for v in (d2a.get('aweme_list') or [])]
-            results['page2_cursor_ms'] = {
-                'cursor_sent': max_cursor_ms,
-                'video_ids': ids2a,
-                'same_as_page1': ids2a == ids1,
-                'has_more': d2a.get('has_more'),
-                'max_cursor': d2a.get('max_cursor'),
-            }
-
-            # Try B: pass max_cursor in seconds
             max_cursor_s = max_cursor_ms // 1000
-            p2b = _fetch({'unique_id': handle, 'count': 10, 'cursor': max_cursor_s})
-            d2b = p2b.get('data', {})
-            ids2b = [str(v.get('aweme_id') or v.get('id')) for v in (d2b.get('aweme_list') or [])]
-            results['page2_cursor_sec'] = {
-                'cursor_sent': max_cursor_s,
-                'video_ids': ids2b,
-                'same_as_page1': ids2b == ids1,
-                'has_more': d2b.get('has_more'),
-                'max_cursor': d2b.get('max_cursor'),
-            }
+
+            for label, params in [
+                ('param_cursor_ms',  {'unique_id': handle, 'count': 10, 'cursor': max_cursor_ms}),
+                ('param_cursor_sec', {'unique_id': handle, 'count': 10, 'cursor': max_cursor_s}),
+                ('param_max_cursor', {'unique_id': handle, 'count': 10, 'max_cursor': max_cursor_ms}),
+                ('param_max_cursor_sec', {'unique_id': handle, 'count': 10, 'max_cursor': max_cursor_s}),
+                ('param_min_cursor', {'unique_id': handle, 'count': 10, 'min_cursor': max_cursor_ms}),
+            ]:
+                pr = _fetch(params)
+                dr = pr.get('data', {})
+                idsr = [str(v.get('aweme_id') or v.get('id')) for v in (dr.get('aweme_list') or [])]
+                results[label] = {
+                    'same_as_page1': idsr == ids1,
+                    'video_ids': idsr,
+                    'max_cursor': dr.get('max_cursor'),
+                    'has_more': dr.get('has_more'),
+                }
 
         return jsonify(results)
     except Exception as e:
