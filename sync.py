@@ -80,6 +80,7 @@ def sync_creator():
             next_cursor = (
                 raw.get("data", {}).get("cursor")
                 or raw.get("data", {}).get("nextCursor")
+                or raw.get("data", {}).get("max_cursor")
             )
 
             if not has_more or not next_cursor or total_fetched >= 200:
