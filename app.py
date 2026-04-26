@@ -293,24 +293,18 @@ def debug_fetch():
         data = raw.get('data', {})
         aweme_list = data.get('aweme_list') or data.get('videos') or []
         parsed = tikhub.parse_videos(raw)
+        # All non-list fields from data so we can spot any pagination keys
+        pagination_fields = {
+            k: v for k, v in data.items()
+            if not isinstance(v, list) and k not in ('aweme_list', 'videos')
+        }
         return jsonify({
             'handle': handle,
             'cursor_sent': cursor,
             'raw_video_count': len(aweme_list),
             'parsed_video_count': len(parsed),
-            'has_more': data.get('has_more'),
-            'min_cursor': data.get('min_cursor'),
-            'max_cursor': data.get('max_cursor'),
-            'cursor_field': data.get('cursor'),
-            'videos_sample': [
-                {
-                    'video_id': v['video_id'],
-                    'posted_at': v['posted_at'],
-                    'tagged_product_id': v['tagged_product_id'],
-                    'description': (v['description'] or '')[:60],
-                }
-                for v in parsed[:5]
-            ],
+            'all_data_fields': pagination_fields,
+            'video_ids': [v['video_id'] for v in parsed],
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
