@@ -284,54 +284,22 @@ def trigger_sync_gmv():
 
 @app.route('/api/debug/fetch', methods=['GET'])
 def debug_fetch():
-    import requests as _requests
     handle = db.get_setting('creator_handle')
     if not handle:
         return jsonify({'error': 'no creator_handle set'}), 400
-
-    def _fetch(params):
-        url = f"{tikhub.TIKHUB_BASE}/api/v1/tiktok/app/v3/fetch_user_post_videos"
-        resp = _requests.get(url, headers=tikhub._headers(), params=params, timeout=30)
-        resp.raise_for_status()
-        return resp.json()
-
+    max_cursor = request.args.get('max_cursor', None, type=int)
     try:
-        # Page 1
-        p1 = _fetch({'unique_id': handle, 'count': 10})
-        d1 = p1.get('data', {})
-        ids1 = [str(v.get('aweme_id') or v.get('id')) for v in (d1.get('aweme_list') or [])]
-        max_cursor_ms = d1.get('max_cursor')
-
-        results = {
-            'page1': {
-                'video_ids': ids1,
-                'has_more': d1.get('has_more'),
-                'max_cursor': max_cursor_ms,
-                'min_cursor': d1.get('min_cursor'),
-            }
-        }
-
-        if max_cursor_ms:
-            max_cursor_s = max_cursor_ms // 1000
-
-            for label, params in [
-                ('param_cursor_ms',  {'unique_id': handle, 'count': 10, 'cursor': max_cursor_ms}),
-                ('param_cursor_sec', {'unique_id': handle, 'count': 10, 'cursor': max_cursor_s}),
-                ('param_max_cursor', {'unique_id': handle, 'count': 10, 'max_cursor': max_cursor_ms}),
-                ('param_max_cursor_sec', {'unique_id': handle, 'count': 10, 'max_cursor': max_cursor_s}),
-                ('param_min_cursor', {'unique_id': handle, 'count': 10, 'min_cursor': max_cursor_ms}),
-            ]:
-                pr = _fetch(params)
-                dr = pr.get('data', {})
-                idsr = [str(v.get('aweme_id') or v.get('id')) for v in (dr.get('aweme_list') or [])]
-                results[label] = {
-                    'same_as_page1': idsr == ids1,
-                    'video_ids': idsr,
-                    'max_cursor': dr.get('max_cursor'),
-                    'has_more': dr.get('has_more'),
-                }
-
-        return jsonify(results)
+        raw = tikhub.fetch_user_videos(handle, count=10, max_cursor=max_cursor)
+        data = raw.get('data', {})
+        parsed = tikhub.parse_videos(raw)
+        return jsonify({
+            'handle': handle,
+            'max_cursor_sent': max_cursor,
+            'video_count': len(parsed),
+            'has_more': data.get('has_more'),
+            'next_max_cursor': data.get('max_cursor'),
+            'video_ids': [v['video_id'] for v in parsed],
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

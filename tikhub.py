@@ -37,12 +37,12 @@ def _post(path, body, retries=2):
             time.sleep(2 ** attempt)
 
 
-def fetch_user_videos(username, count=30, cursor=0):
+def fetch_user_videos(username, count=30, max_cursor=None):
     """Fetch recent videos for a TikTok username."""
-    return _get(
-        "/api/v1/tiktok/app/v3/fetch_user_post_videos",
-        {"unique_id": username, "count": count, "cursor": cursor}
-    )
+    params = {"unique_id": username, "count": count}
+    if max_cursor:
+        params["max_cursor"] = max_cursor
+    return _get("/api/v1/tiktok/app/v3/fetch_user_post_videos", params)
 
 
 def fetch_video_detail(video_id):

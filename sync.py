@@ -21,11 +21,11 @@ def sync_creator():
     logger.info(f"Syncing @{handle} — {len(products_map)} known products")
 
     total_fetched = 0
-    cursor = 0
+    max_cursor = None
 
     try:
         while True:
-            raw = tikhub.fetch_user_videos(handle, count=30, cursor=cursor)
+            raw = tikhub.fetch_user_videos(handle, count=30, max_cursor=max_cursor)
             videos = tikhub.parse_videos(raw)
 
             if not videos:
@@ -73,20 +73,13 @@ def sync_creator():
 
             total_fetched += len(videos)
 
-            has_more = (
-                raw.get("data", {}).get("has_more")
-                or raw.get("data", {}).get("hasMore")
-            )
-            next_cursor = (
-                raw.get("data", {}).get("cursor")
-                or raw.get("data", {}).get("nextCursor")
-                or raw.get("data", {}).get("max_cursor")
-            )
+            has_more = raw.get("data", {}).get("has_more")
+            next_max_cursor = raw.get("data", {}).get("max_cursor")
 
-            if not has_more or not next_cursor or total_fetched >= 200:
+            if not has_more or not next_max_cursor or total_fetched >= 200:
                 break
 
-            cursor = next_cursor
+            max_cursor = next_max_cursor
             time.sleep(0.5)
 
         db.log_sync(None, "success", total_fetched)
