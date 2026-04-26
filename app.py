@@ -282,28 +282,6 @@ def trigger_sync_gmv():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
-@app.route('/api/debug/fetch', methods=['GET'])
-def debug_fetch():
-    handle = db.get_setting('creator_handle')
-    if not handle:
-        return jsonify({'error': 'no creator_handle set'}), 400
-    max_cursor = request.args.get('max_cursor', None, type=int)
-    try:
-        raw = tikhub.fetch_user_videos(handle, count=10, max_cursor=max_cursor)
-        data = raw.get('data', {})
-        parsed = tikhub.parse_videos(raw)
-        return jsonify({
-            'handle': handle,
-            'max_cursor_sent': max_cursor,
-            'video_count': len(parsed),
-            'has_more': data.get('has_more'),
-            'next_max_cursor': data.get('max_cursor'),
-            'video_ids': [v['video_id'] for v in parsed],
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
 @app.route('/api/videos/<video_id>/assign', methods=['POST'])
 def assign_video(video_id):
     data = request.get_json()
