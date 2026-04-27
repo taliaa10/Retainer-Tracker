@@ -269,6 +269,8 @@
   {% if videos %}
     {% for v in videos %}
     <div class="video-card" style="animation-delay:{{ loop.index0 * 0.04 }}s;">
+      <a href="https://www.tiktok.com/@{{ creator_handle }}/video/{{ v.video_id }}"
+         target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;">
       <div class="video-top">
         <div class="video-thumb">
           {% if v.cover_url %}
@@ -294,6 +296,7 @@
           </div>
         </div>
       </div>
+      </a>
       <div class="video-metrics">
         <div class="metric-box">
           <div class="metric-label">Views</div>

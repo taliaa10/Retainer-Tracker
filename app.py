@@ -118,6 +118,7 @@ def dashboard():
     top_products = db.get_top_products(active['id'])
     recent = db.get_recent_activity(active['id'])
     products_info = db.get_products_info_map()
+    creator_handle = db.get_setting('creator_handle', '')
     today = date.today()
 
     return render_template(
@@ -132,6 +133,7 @@ def dashboard():
         today=today,
         filter_type=filter_type,
         products_info=products_info,
+        creator_handle=creator_handle,
     )
 
 
