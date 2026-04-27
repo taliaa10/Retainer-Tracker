@@ -41,19 +41,30 @@ def sync_creator():
                     except (ValueError, OSError):
                         pass
 
-                tagged_product_id = v["tagged_product_id"]
+                all_pids = v["all_product_ids"]
 
-                # For new videos with no product tag, try fetching video detail
-                if not tagged_product_id and not db.video_exists(v["video_id"]):
+                # For new videos with no product tags, try fetching video detail
+                if not all_pids and not db.video_exists(v["video_id"]):
                     try:
                         detail = tikhub.fetch_video_detail(v["video_id"])
-                        tagged_product_id = tikhub.parse_video_detail(detail)
+                        pid = tikhub.parse_video_detail(detail)
+                        if pid:
+                            all_pids = [pid]
                         time.sleep(0.3)
                     except Exception as e:
                         logger.warning(f"Could not fetch detail for {v['video_id']}: {e}")
 
-                # Assign to the client who owns this product
-                client_id = products_map.get(tagged_product_id) if tagged_product_id else None
+                # Pick first product ID that matches a registered client
+                tagged_product_id = None
+                client_id = None
+                for pid in all_pids:
+                    if pid in products_map:
+                        tagged_product_id = pid
+                        client_id = products_map[pid]
+                        break
+                # Fall back to first product ID even if unregistered
+                if not tagged_product_id and all_pids:
+                    tagged_product_id = all_pids[0]
 
                 db.upsert_video(
                     client_id=client_id,
