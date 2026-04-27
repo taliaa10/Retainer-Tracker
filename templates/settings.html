@@ -258,7 +258,7 @@
                 </form>
               </div>
               <div class="product-edit-form" id="pe-{{ product.id }}">
-                <form method="POST" action="/settings/products/{{ product.id }}/update">
+                <form method="POST" action="/settings/products/{{ product.id }}/update" enctype="multipart/form-data">
                   <div class="form-row">
                     <div class="form-group">
                       <label>Product Name</label>
@@ -267,8 +267,9 @@
                   </div>
                   <div class="form-row" style="margin-top:6px;">
                     <div class="form-group">
-                      <label>Thumbnail URL</label>
-                      <input type="text" name="thumbnail_url" value="{{ product.thumbnail_url or '' }}" placeholder="https://...">
+                      <label>Photo</label>
+                      <input type="file" name="thumbnail_file" accept="image/*"
+                             style="font-size:10px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 8px;">
                     </div>
                   </div>
                   <div style="margin-top:8px;">

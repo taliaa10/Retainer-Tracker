@@ -241,11 +241,15 @@ def add_product():
 
 @app.route('/settings/products/<int:product_db_id>/update', methods=['POST'])
 def update_product(product_db_id):
-    db.set_product_info(
-        product_db_id,
-        request.form.get('product_name', '').strip(),
-        request.form.get('thumbnail_url', '').strip(),
-    )
+    import base64 as _b64
+    product_name = request.form.get('product_name', '').strip()
+    thumbnail_url = request.form.get('thumbnail_url', '').strip()
+    file = request.files.get('thumbnail_file')
+    if file and file.filename:
+        data = file.read()
+        mime = file.content_type or 'image/jpeg'
+        thumbnail_url = f"data:{mime};base64,{_b64.b64encode(data).decode()}"
+    db.set_product_info(product_db_id, product_name, thumbnail_url or None)
     return redirect(url_for('settings'))
 
 

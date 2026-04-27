@@ -372,7 +372,7 @@ def get_client_videos(client_id, filter_type=None, limit=30):
         SELECT
             v.*,
             vm.views, vm.likes, vm.comments, vm.gmv, vm.orders,
-            vm.tagged_product_id,
+            vm.tagged_product_id, vm.all_product_ids,
             p.product_name
         FROM videos v
         LEFT JOIN video_metrics vm ON vm.video_id = v.video_id
