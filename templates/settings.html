@@ -4,83 +4,84 @@
 {% block title %}Trakr — Settings{% endblock %}
 
 {% block extra_css %}
-  .topnav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; color: var(--accent); }
-  .page-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--text); }
+  .topnav { position: sticky; top: 0; z-index: 100; background: var(--header-bg); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-weight: 800; font-size: 15px; letter-spacing: 0.12em; color: #fff; text-transform: uppercase; }
+  .logo .logo-accent { color: var(--accent); }
+  .page-title { font-weight: 700; font-size: 14px; color: #fff; }
 
   .settings-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
 
-  .section-header { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .section-header { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border2); }
 
-  .client-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; border-left: 3px solid transparent; }
+  .client-card { background: var(--surface); box-shadow: var(--shadow); border-radius: 16px; overflow: hidden; border-left: 3px solid transparent; }
 
   .client-header { display: flex; align-items: center; gap: 10px; padding: 14px; cursor: pointer; }
   .client-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .client-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; flex: 1; }
-  .client-handle { font-size: 10px; color: var(--muted); }
+  .client-name { font-weight: 700; font-size: 14px; flex: 1; color: var(--text); }
+  .client-handle { font-size: 10px; font-weight: 500; color: var(--muted); }
   .expand-btn { font-size: 14px; color: var(--muted); }
 
-  .client-body { border-top: 1px solid var(--border); display: none; }
+  .client-body { border-top: 1px solid var(--border2); display: none; }
   .client-body.open { display: block; }
 
-  .client-section { padding: 14px; border-bottom: 1px solid var(--border); }
+  .client-section { padding: 14px; border-bottom: 1px solid var(--border2); }
   .client-section:last-child { border-bottom: none; }
-  .client-section-title { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .client-section-title { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 10px; }
 
   .form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
   .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
-  .form-group label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; }
+  .form-group label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
   .form-group input[type="text"],
   .form-group input[type="number"],
   .form-group input[type="date"] {
-    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-    color: var(--text); font-family: 'DM Mono', monospace; font-size: 11px;
-    padding: 7px 10px; outline: none; transition: border-color 0.15s;
+    background: var(--bg); border: 1px solid var(--muted3); border-radius: 8px;
+    color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 500;
+    padding: 8px 10px; outline: none; transition: border-color 0.15s;
   }
   .form-group input:focus { border-color: var(--accent); }
-  .form-group input[type="color"] { width: 40px; height: 34px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); cursor: pointer; }
+  .form-group input[type="color"] { width: 40px; height: 36px; padding: 2px; border: 1px solid var(--muted3); border-radius: 8px; background: var(--bg); cursor: pointer; }
 
-  .btn { display: inline-flex; align-items: center; gap: 4px; padding: 7px 13px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; border: none; transition: opacity 0.15s; }
+  .btn { display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; border: none; transition: opacity 0.15s; }
   .btn:hover { opacity: 0.85; }
-  .btn-primary { background: var(--accent); color: #0a0a0a; }
-  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  .btn-danger { background: rgba(255,68,68,0.15); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); }
-  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-primary { background: var(--accent-g); color: #111; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--muted3); }
+  .btn-danger { background: #FFF1F0; color: var(--accent2); border: 1px solid rgba(249,112,102,0.3); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--muted3); }
 
-  .period-info { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+  .period-info { background: var(--bg); border: 1px solid var(--border2); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
   .period-info-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; }
-  .period-label { color: var(--muted); font-size: 9px; letter-spacing: 0.8px; text-transform: uppercase; }
-  .period-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--accent); }
+  .period-label { color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .period-val { font-weight: 700; font-size: 13px; color: var(--accent); }
 
   .period-history { margin-top: 10px; }
-  .history-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 10px; color: var(--muted); }
+  .history-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border2); font-size: 10px; font-weight: 500; color: var(--muted); }
   .history-item:last-child { border-bottom: none; }
-  .history-badge { padding: 2px 7px; border-radius: 4px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; }
-  .history-badge.completed { background: rgba(200,241,53,0.1); color: var(--accent); }
+  .history-badge { padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .history-badge.completed { background: #F0FBE0; color: var(--accent); }
   .history-badge.active { background: rgba(77,159,255,0.1); color: #4d9fff; }
-  .history-badge.overdue { background: rgba(255,68,68,0.1); color: #ff4444; }
+  .history-badge.overdue { background: #FFF1F0; color: var(--accent2); }
 
   .product-list-sm { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-  .product-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .product-item { background: var(--bg); border: 1px solid var(--border2); border-radius: 10px; overflow: hidden; }
   .product-item-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer; }
-  .product-thumb { width: 36px; height: 36px; border-radius: 5px; object-fit: cover; background: var(--muted2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
+  .product-thumb { width: 36px; height: 36px; border-radius: 7px; object-fit: cover; background: var(--muted3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
   .product-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .product-item-info { flex: 1; min-width: 0; }
-  .product-item-name { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .product-item-id { font-size: 9px; color: var(--muted); margin-top: 1px; }
-  .product-edit-form { border-top: 1px solid var(--border); padding: 10px; display: none; }
+  .product-item-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .product-item-id { font-size: 9px; font-weight: 500; color: var(--muted); margin-top: 1px; }
+  .product-edit-form { border-top: 1px solid var(--border2); padding: 10px; display: none; background: var(--surface2); }
   .product-edit-form.open { display: block; }
   .product-edit-form .form-row { gap: 6px; }
-  .product-edit-form .form-group input { font-size: 10px; padding: 6px 8px; }
+  .product-edit-form .form-group input { font-size: 11px; padding: 6px 8px; }
 
-  .add-client-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .add-client-card { background: var(--surface); box-shadow: var(--shadow); border-radius: 16px; padding: 16px; }
 
   .no-clients-msg { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
-  .no-clients-msg h2 { font-family: 'Syne', sans-serif; color: var(--text); margin-bottom: 8px; }
+  .no-clients-msg h2 { font-weight: 700; color: var(--text); margin-bottom: 8px; }
 
   @media (min-width: 768px) {
     .topnav { display: none; }
-    .desktop-topbar { display: flex !important; align-items: center; padding: 18px 28px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .desktop-topbar { display: flex !important; align-items: center; padding: 18px 28px; border-bottom: 1px solid var(--border2); background: var(--bg); position: sticky; top: 0; z-index: 50; }
     .settings-body { padding: 24px 28px; max-width: 800px; }
   }
   .desktop-topbar { display: none; }
@@ -89,13 +90,13 @@
 {% block content %}
 
 <div class="topnav">
-  <div class="logo">TRAKR</div>
+  <div class="logo">TR<span class="logo-accent">A</span>KR</div>
   <div class="page-title">Settings</div>
   <div style="width:50px;"></div>
 </div>
 
 <div class="desktop-topbar">
-  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;letter-spacing:-0.3px;">Settings</div>
+  <div style="font-weight:700;font-size:16px;">Settings</div>
 </div>
 
 <div class="settings-body">
@@ -325,7 +326,7 @@
       <div class="form-row" style="margin-top:8px;">
         <div class="form-group" style="flex:0;">
           <label>Color</label>
-          <input type="color" name="brand_color" value="#c8f135">
+          <input type="color" name="brand_color" value="#3DDC84">
         </div>
         <div class="form-group" style="max-width:100px;">
           <label>Video Target</label>

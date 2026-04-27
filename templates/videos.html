@@ -4,73 +4,71 @@
 {% block title %}Trakr — Videos{% endblock %}
 
 {% block extra_css %}
-  .topnav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; color: var(--accent); }
-  .page-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--text); }
+  .topnav { position: sticky; top: 0; z-index: 100; background: var(--header-bg); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-weight: 800; font-size: 15px; letter-spacing: 0.12em; color: #fff; text-transform: uppercase; }
+  .logo .logo-accent { color: var(--accent); }
+  .page-title { font-weight: 700; font-size: 14px; color: #fff; }
 
-  .filter-strip { display: flex; gap: 6px; padding: 11px 16px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border); align-items: center; }
+  .filter-strip { display: flex; gap: 6px; padding: 11px 16px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border2); align-items: center; background: var(--surface); }
   .filter-strip::-webkit-scrollbar { display: none; }
-  .fchip { display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 10px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
-  .fchip.active { color: var(--text); border-color: var(--muted); background: var(--surface2); }
-  .fchip.all.active { color: var(--accent); border-color: rgba(200,241,53,0.4); background: rgba(200,241,53,0.07); }
+  .fchip { display: flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 10px; font-weight: 600; cursor: pointer; border: 1px solid var(--muted3); color: var(--muted); white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
+  .fchip.active { background: var(--header-bg); color: var(--accent); border-color: var(--header-bg); }
   .fchip .cdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .sort-chip { margin-left: auto; flex-shrink: 0; padding: 5px 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: 10px; color: var(--muted); cursor: pointer; white-space: nowrap; }
 
   .table-meta { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px 8px; }
-  .table-count { font-size: 10px; color: var(--muted); }
-  .table-count strong { color: var(--text); }
+  .table-count { font-size: 10px; font-weight: 500; color: var(--muted); }
+  .table-count strong { color: var(--text); font-weight: 700; }
 
-  .table-scroll { overflow-x: auto; padding: 0 16px 80px; scrollbar-width: thin; scrollbar-color: var(--muted2) transparent; }
+  .table-scroll { overflow-x: auto; padding: 0 16px 80px; scrollbar-width: thin; scrollbar-color: var(--muted3) transparent; }
   .table-scroll::-webkit-scrollbar { height: 4px; }
-  .table-scroll::-webkit-scrollbar-thumb { background: var(--muted2); border-radius: 2px; }
+  .table-scroll::-webkit-scrollbar-thumb { background: var(--muted3); border-radius: 2px; }
 
   .vtable { width: 100%; min-width: 700px; border-collapse: collapse; font-size: 11px; }
-  .vtable thead tr { background: var(--surface); border-bottom: 1px solid var(--border); }
-  .vtable th { padding: 9px 12px; text-align: left; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; font-weight: 500; white-space: nowrap; border-right: 1px solid var(--border); background: var(--surface); cursor: pointer; user-select: none; transition: color 0.15s; }
+  .vtable thead tr { background: var(--surface); border-bottom: 1px solid var(--border2); }
+  .vtable th { padding: 9px 12px; text-align: left; font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; border-right: 1px solid var(--border2); background: var(--surface); cursor: pointer; user-select: none; transition: color 0.15s; }
   .vtable th:hover { color: var(--text); }
   .vtable th:last-child { border-right: none; }
-  .vtable tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; cursor: pointer; animation: fadeIn 0.25s ease both; }
+  .vtable tbody tr { border-bottom: 1px solid var(--border2); transition: background 0.12s; cursor: pointer; animation: fadeIn 0.25s ease both; }
   .vtable tbody tr:hover { background: var(--surface2); }
   .vtable tbody tr:last-child { border-bottom: none; }
-  .vtable td { padding: 8px 12px; vertical-align: middle; border-right: 1px solid var(--border); white-space: nowrap; }
+  .vtable td { padding: 8px 12px; vertical-align: middle; border-right: 1px solid var(--border2); white-space: nowrap; }
   .vtable td:last-child { border-right: none; }
 
   .td-thumb { width: 48px; padding: 6px 8px !important; }
-  .thumb-wrap { width: 34px; height: 44px; border-radius: 4px; overflow: hidden; background: var(--muted2); position: relative; }
+  .thumb-wrap { width: 34px; height: 44px; border-radius: 6px; overflow: hidden; background: var(--muted3); position: relative; }
   .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .thumb-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 
   .td-brand { width: 20px; padding: 8px 6px !important; }
   .brand-bar { width: 3px; height: 28px; border-radius: 99px; }
 
-  .td-desc { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); font-size: 11px; }
-  .td-date { color: var(--muted); font-size: 10px; }
-  .td-num { text-align: right; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 12px; color: var(--text); letter-spacing: -0.3px; }
+  .td-desc { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); font-size: 12px; font-weight: 500; }
+  .td-date { color: var(--muted); font-size: 10px; font-weight: 500; }
+  .td-num { text-align: right; font-weight: 700; font-size: 12px; color: var(--text); }
   .td-num.green { color: var(--accent); }
   .td-num.dim { color: var(--muted); }
 
   .td-product { max-width: 160px; }
   .product-cell-inner { display: flex; align-items: center; gap: 6px; }
   .prod-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-  .prod-label { font-size: 10px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+  .prod-label { font-size: 10px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
   .prod-label.none { color: var(--accent2); }
 
   .td-status { padding: 8px 10px !important; }
   .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-  .status-dot.live { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
+  .status-dot.live { background: var(--accent); }
   .status-dot.notag { background: var(--accent2); }
 
-  .totals-row td { background: var(--surface) !important; border-top: 2px solid var(--border) !important; font-size: 10px; color: var(--muted); padding: 9px 12px !important; }
-  .totals-row td.total-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent); text-align: right; }
-  .totals-row td.total-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
-  .assign-select { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--accent2); font-family: 'DM Mono', monospace; font-size: 9px; padding: 3px 6px; cursor: pointer; outline: none; }
+  .totals-row td { background: var(--surface2) !important; border-top: 2px solid var(--border2) !important; font-size: 10px; color: var(--muted); padding: 9px 12px !important; }
+  .totals-row td.total-val { font-weight: 700; font-size: 12px; color: var(--accent); text-align: right; }
+  .totals-row td.total-label { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .assign-select { background: var(--bg); border: 1px solid var(--muted3); border-radius: 6px; color: var(--accent2); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 9px; font-weight: 600; padding: 3px 6px; cursor: pointer; outline: none; }
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
 
   @media (min-width: 768px) {
-    body { padding-bottom: 0; }
     .topnav { display: none; }
-    .desktop-topbar { display: flex !important; align-items: center; justify-content: space-between; padding: 16px 28px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .desktop-topbar { display: flex !important; align-items: center; justify-content: space-between; padding: 16px 28px; border-bottom: 1px solid var(--border2); background: var(--bg); position: sticky; top: 0; z-index: 50; }
     .filter-strip { padding: 11px 28px; }
     .table-meta { padding: 10px 28px 8px; }
     .table-scroll { padding: 0 28px 28px; }
@@ -82,13 +80,13 @@
 {% block content %}
 
 <div class="topnav">
-  <div class="logo">TRAKR</div>
+  <div class="logo">TR<span class="logo-accent">A</span>KR</div>
   <div class="page-title">Videos</div>
   <div style="width:50px;"></div>
 </div>
 
 <div class="desktop-topbar">
-  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;">Videos</div>
+  <div style="font-weight:700;font-size:16px;">Videos</div>
 </div>
 
 <!-- FILTER STRIP -->

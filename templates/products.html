@@ -4,63 +4,63 @@
 {% block title %}Trakr — Products{% endblock %}
 
 {% block extra_css %}
-  .topnav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; color: var(--accent); }
-  .page-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--text); }
+  .topnav { position: sticky; top: 0; z-index: 100; background: var(--header-bg); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-weight: 800; font-size: 15px; letter-spacing: 0.12em; color: #fff; text-transform: uppercase; }
+  .logo .logo-accent { color: var(--accent); }
+  .page-title { font-weight: 700; font-size: 14px; color: #fff; }
 
   .stats-scroll { display: flex; gap: 10px; padding: 14px 16px; overflow-x: auto; scrollbar-width: none; }
   .stats-scroll::-webkit-scrollbar { display: none; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; min-width: 120px; flex-shrink: 0; }
+  .stat-card { background: var(--surface); box-shadow: var(--shadow); border-radius: 14px; padding: 14px 16px; min-width: 120px; flex-shrink: 0; }
   .stat-card.wide { min-width: 140px; }
-  .stat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-  .stat-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -1px; color: var(--text); line-height: 1; }
+  .stat-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-weight: 700; font-size: 22px; color: var(--text); line-height: 1; }
   .stat-value.green { color: var(--accent); }
-  .stat-delta { font-size: 9px; color: var(--accent); margin-top: 5px; }
+  .stat-delta { font-size: 9px; font-weight: 600; color: var(--muted); margin-top: 5px; }
 
   .filter-bar { display: flex; align-items: center; gap: 8px; padding: 0 16px 14px; overflow-x: auto; scrollbar-width: none; }
   .filter-bar::-webkit-scrollbar { display: none; }
-  .filter-chip { display: flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 20px; font-size: 10px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
-  .filter-chip.active { color: var(--text); border-color: var(--muted); background: var(--surface2); }
-  .filter-chip.all.active { color: var(--accent); border-color: rgba(200,241,53,0.4); background: rgba(200,241,53,0.07); }
+  .filter-chip { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 10px; font-weight: 600; cursor: pointer; border: 1px solid var(--muted3); color: var(--muted); white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
+  .filter-chip.active { background: var(--header-bg); color: var(--accent); border-color: var(--header-bg); }
   .filter-chip .cdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .sort-pill { margin-left: auto; flex-shrink: 0; padding: 5px 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: 10px; color: var(--muted); cursor: pointer; white-space: nowrap; }
 
   .product-list { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
-  .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; animation: fadeUp 0.3s ease both; border-left: 3px solid transparent; }
+  .product-card { background: var(--surface); box-shadow: var(--shadow); border-radius: 16px; overflow: hidden; animation: fadeUp 0.3s ease both; border-left: 3px solid transparent; }
   .product-top { display: flex; align-items: center; gap: 12px; padding: 13px 13px 10px; }
-  .product-img { width: 52px; height: 52px; border-radius: 8px; background: var(--muted2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .product-img { width: 52px; height: 52px; border-radius: 10px; background: var(--muted3); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden; }
+  .product-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .product-right { flex: 1; min-width: 0; }
   .product-name-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-  .product-name { font-size: 12px; color: var(--text); line-height: 1.4; flex: 1; }
-  .product-gmv { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
+  .product-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; flex: 1; }
+  .product-gmv { font-weight: 700; font-size: 14px; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
   .product-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-  .product-id { font-size: 9px; color: var(--muted); text-decoration: none; }
+  .product-id { font-size: 9px; font-weight: 600; color: var(--muted); text-decoration: none; }
   .product-id:hover { color: var(--accent); }
-  .brand-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 9px; letter-spacing: 0.3px; text-transform: uppercase; }
+  .brand-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase; }
 
-  .product-metrics { display: flex; border-top: 1px solid var(--border); }
-  .metric-box { flex: 1; padding: 10px 12px; border-right: 1px solid var(--border); text-align: center; }
+  .product-metrics { display: flex; border-top: 1px solid var(--border2); }
+  .metric-box { flex: 1; padding: 10px 12px; border-right: 1px solid var(--border2); text-align: center; }
   .metric-box:last-child { border-right: none; }
-  .metric-label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 4px; }
-  .metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: -0.5px; color: var(--text); }
+  .metric-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+  .metric-val { font-weight: 700; font-size: 14px; color: var(--text); }
   .metric-val.green { color: var(--accent); }
   .metric-val.dim { color: var(--muted); }
 
-  .video-strip { display: flex; gap: 6px; padding: 10px 13px; border-top: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; align-items: center; }
+  .video-strip { display: flex; gap: 6px; padding: 10px 13px; border-top: 1px solid var(--border2); overflow-x: auto; scrollbar-width: none; align-items: center; }
   .video-strip::-webkit-scrollbar { display: none; }
-  .strip-label { font-size: 9px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; }
-  .strip-thumb { width: 36px; height: 48px; border-radius: 5px; background: var(--muted2); flex-shrink: 0; overflow: hidden; position: relative; }
+  .strip-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; }
+  .strip-thumb { width: 36px; height: 48px; border-radius: 6px; background: var(--muted3); flex-shrink: 0; overflow: hidden; position: relative; }
   .strip-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .strip-views { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font-size: 7px; color: #fff; background: rgba(0,0,0,0.6); padding: 1px 2px; }
-  .strip-no-videos { font-size: 10px; color: var(--muted); font-style: italic; }
+  .strip-views { position: absolute; bottom: 2px; left: 0; right: 0; text-align: center; font-size: 7px; font-weight: 700; color: #fff; background: rgba(0,0,0,0.6); padding: 1px 2px; }
+  .strip-no-videos { font-size: 10px; font-weight: 500; color: var(--muted); }
 
-  .dead-flag { display: flex; align-items: center; gap: 6px; padding: 8px 13px; border-top: 1px solid var(--border); font-size: 10px; color: var(--accent2); background: rgba(255,107,53,0.05); }
+  .dead-flag { display: flex; align-items: center; gap: 6px; padding: 8px 13px; border-top: 1px solid var(--border2); font-size: 10px; font-weight: 600; color: var(--accent2); background: #FFF1F0; }
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
 
   @media (min-width: 768px) {
     .topnav { display: none; }
-    .desktop-topbar { display: flex !important; align-items: center; justify-content: space-between; padding: 18px 28px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .desktop-topbar { display: flex !important; align-items: center; justify-content: space-between; padding: 18px 28px; border-bottom: 1px solid var(--border2); background: var(--bg); position: sticky; top: 0; z-index: 50; }
     .stats-scroll { padding: 16px 28px; }
     .stat-card { min-width: 0; flex: 1; }
     .filter-bar { padding: 0 28px 14px; }
@@ -72,13 +72,13 @@
 {% block content %}
 
 <div class="topnav">
-  <div class="logo">TRAKR</div>
+  <div class="logo">TR<span class="logo-accent">A</span>KR</div>
   <div class="page-title">Products</div>
   <div style="width:50px"></div>
 </div>
 
 <div class="desktop-topbar">
-  <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;letter-spacing:-0.3px;">Products</div>
+  <div style="font-weight:700;font-size:16px;">Products</div>
   <div style="font-size:10px;color:var(--muted);">All retainer clients</div>
 </div>
 
