@@ -7,28 +7,23 @@
   /* ── TOP NAV ── */
   .topnav {
     position: sticky; top: 0; z-index: 100;
-    background: var(--bg); border-bottom: 1px solid var(--border);
-    padding: 14px 16px;
+    background: var(--header-bg);
+    padding: 13px 16px;
     display: flex; align-items: center; justify-content: space-between;
   }
-  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.5px; color: var(--accent); }
+  .logo { font-weight: 800; font-size: 15px; letter-spacing: 0.12em; color: #fff; text-transform: uppercase; }
+  .logo .logo-accent { color: var(--accent); }
   .nav-right { display: flex; align-items: center; gap: 10px; }
-  .menu-btn {
-    width: 34px; height: 34px; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; cursor: pointer;
-  }
 
   /* ── RETAINER PANEL ── */
-  .retainer-panel { margin: 14px 16px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .retainer-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--border); }
-  .retainer-panel-title { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .retainer-panel { margin: 14px 16px 0; background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+  .retainer-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border2); }
+  .retainer-panel-title { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
   .retainer-month { font-size: 10px; color: var(--muted); }
 
   .retainer-row {
     display: flex; align-items: center; gap: 12px;
-    padding: 11px 14px; border-bottom: 1px solid var(--border);
+    padding: 11px 14px; border-bottom: 1px solid var(--border2);
     cursor: pointer; transition: background 0.15s; position: relative;
   }
   .retainer-row:last-child { border-bottom: none; }
@@ -37,82 +32,84 @@
   .retainer-row.active::before {
     content: ''; position: absolute; left: 0; top: 0; bottom: 0;
     width: 3px; border-radius: 0 2px 2px 0;
-    background: var(--row-color, #fff);
+    background: var(--row-color, #ddd);
   }
 
   .retainer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .retainer-name { font-size: 12px; color: var(--text); width: 76px; flex-shrink: 0; }
-  .retainer-bar-wrap { flex: 1; height: 5px; background: var(--muted2); border-radius: 99px; overflow: hidden; }
+  .retainer-name { font-size: 12px; font-weight: 500; color: var(--text); width: 76px; flex-shrink: 0; }
+  .retainer-bar-wrap { flex: 1; height: 4px; background: var(--muted3); border-radius: 99px; overflow: hidden; }
   .retainer-bar-fill { height: 100%; border-radius: 99px; transition: width 0.7s ease; }
-  .retainer-count { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; flex-shrink: 0; width: 44px; text-align: right; }
-  .retainer-count em { font-style: normal; font-family: 'DM Mono', monospace; font-weight: 400; color: var(--muted); font-size: 10px; }
+  .retainer-count { font-size: 11px; font-weight: 700; flex-shrink: 0; width: 44px; text-align: right; }
+  .retainer-count em { font-style: normal; font-weight: 400; color: var(--muted); font-size: 10px; }
 
   /* ── ACTIVE CLIENT BAR ── */
   .active-client-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 0; }
+  .client-bar-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .client-bar-meta { font-size: 10px; color: var(--muted); margin-top: 3px; }
 
   /* ── STATS ── */
   .stats-scroll { display: flex; gap: 10px; padding: 14px 16px; overflow-x: auto; scrollbar-width: none; }
   .stats-scroll::-webkit-scrollbar { display: none; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; min-width: 120px; flex-shrink: 0; }
+  .stat-card { background: var(--surface); box-shadow: var(--shadow); border-radius: 14px; padding: 14px 16px; min-width: 120px; flex-shrink: 0; }
   .stat-card.wide { min-width: 140px; }
-  .stat-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
-  .stat-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 22px; letter-spacing: -1px; color: var(--text); line-height: 1; }
+  .stat-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-weight: 700; font-size: 22px; color: var(--text); line-height: 1; }
   .stat-value.green { color: var(--accent); }
   .stat-value.orange { color: var(--accent2); }
-  .stat-delta { font-size: 9px; color: var(--accent); margin-top: 5px; }
+  .stat-delta { font-size: 9px; font-weight: 600; color: var(--muted); margin-top: 5px; }
 
   /* ── FILTER ROW ── */
   .filter-row { display: flex; gap: 6px; padding: 0 16px 14px; overflow-x: auto; scrollbar-width: none; }
   .filter-row::-webkit-scrollbar { display: none; }
-  .section-label { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); padding: 0 16px 12px; }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 0 16px 12px; }
 
   /* ── VIDEO CARDS ── */
-  .video-list { display: flex; flex-direction: column; gap: 8px; padding: 0 16px; }
-  .video-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; animation: fadeUp 0.3s ease both; }
-  .video-top { display: flex; gap: 10px; padding: 10px 10px 8px; align-items: flex-start; }
-  .video-thumb { width: 46px; height: 62px; border-radius: 6px; flex-shrink: 0; overflow: hidden; position: relative; background: var(--muted2); }
+  .video-list { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; }
+  .video-card { background: var(--surface); box-shadow: var(--shadow); border-radius: 16px; overflow: hidden; animation: fadeUp 0.3s ease both; }
+  .video-top { display: flex; gap: 10px; padding: 12px 12px 10px; align-items: flex-start; }
+  .video-thumb { width: 52px; height: 68px; border-radius: 10px; flex-shrink: 0; overflow: hidden; position: relative; background: var(--muted3); }
   .video-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .thumb-duration { position: absolute; bottom: 3px; right: 3px; background: rgba(0,0,0,0.72); color: #fff; font-size: 8px; padding: 1px 3px; border-radius: 3px; font-family: 'DM Mono', monospace; }
-  .thumb-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .thumb-duration { position: absolute; bottom: 3px; right: 3px; background: rgba(0,0,0,0.72); color: #fff; font-size: 8px; padding: 1px 4px; border-radius: 3px; font-weight: 600; }
+  .thumb-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
   .video-right { flex: 1; min-width: 0; }
-  .video-desc { font-size: 11px; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .video-meta-row { display: flex; align-items: center; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
-  .video-date { font-size: 9px; color: var(--muted); }
-  .video-metrics { display: flex; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .metric-box { flex: 1; padding: 7px 8px; border-right: 1px solid var(--border); text-align: center; }
+  .video-desc { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .video-meta-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .video-date { font-size: 10px; font-weight: 500; color: var(--muted); }
+  .video-metrics { display: flex; border-top: 1px solid var(--border2); border-bottom: 1px solid var(--border2); }
+  .metric-box { flex: 1; padding: 8px; border-right: 1px solid var(--border2); text-align: center; }
   .metric-box:last-child { border-right: none; }
-  .metric-label { font-size: 8px; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
-  .metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -0.5px; color: var(--text); }
+  .metric-label { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
+  .metric-val { font-weight: 700; font-size: 14px; color: var(--text); }
   .metric-val.green { color: var(--accent); }
-  .metric-sub { font-size: 8px; color: var(--muted); margin-top: 1px; }
-  .product-row { display: flex; align-items: center; gap: 6px; padding: 7px 10px; flex-wrap: wrap; }
-  .product-chip { display: flex; align-items: center; gap: 5px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 7px 3px 4px; min-width: 0; }
-  .product-chip-img { width: 22px; height: 22px; border-radius: 3px; object-fit: cover; flex-shrink: 0; }
-  .product-chip-icon { width: 22px; height: 22px; border-radius: 3px; background: var(--muted2); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
-  .product-chip-name { font-size: 10px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-  .no-product-label { font-size: 9px; color: var(--muted); font-style: italic; }
-  .gmv-pill { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
+  .metric-sub { font-size: 9px; color: var(--muted); margin-top: 1px; }
+  .product-row { display: flex; align-items: center; gap: 6px; padding: 8px 12px; flex-wrap: wrap; }
+  .product-chip { display: flex; align-items: center; gap: 5px; background: var(--surface2); border-radius: 8px; padding: 4px 8px 4px 4px; min-width: 0; }
+  .product-chip-img { width: 24px; height: 24px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
+  .product-chip-icon { width: 24px; height: 24px; border-radius: 5px; background: var(--muted3); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  .product-chip-name { font-size: 10px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+  .no-product-label { font-size: 9px; font-weight: 600; color: var(--muted); }
+  .gmv-pill { font-weight: 700; font-size: 12px; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
 
   /* ── BOTTOM PANELS ── */
   .panels { padding: 20px 16px 0; display: flex; flex-direction: column; gap: 12px; }
-  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-  .panel-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
-  .product-rank { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .panel { background: var(--surface); box-shadow: var(--shadow); border-radius: 16px; padding: 16px; }
+  .panel-title { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .product-rank { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border2); }
   .product-rank:last-child { border-bottom: none; }
-  .rank-num { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; color: var(--muted2); width: 18px; text-align: center; flex-shrink: 0; }
+  .rank-num { font-size: 14px; font-weight: 700; color: var(--muted2); width: 18px; text-align: center; flex-shrink: 0; }
   .rank-num.top { color: var(--accent); }
-  .rank-img { width: 32px; height: 32px; border-radius: 5px; background: var(--muted2); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .rank-img { width: 32px; height: 32px; border-radius: 7px; background: var(--muted3); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
   .rank-info { flex: 1; min-width: 0; }
-  .rank-name { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rank-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .rank-stats { font-size: 9px; color: var(--muted); margin-top: 2px; }
-  .rank-gmv { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
-  .timeline-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .rank-gmv { font-size: 12px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+  .timeline-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border2); }
   .timeline-row:last-child { border-bottom: none; }
-  .tl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted2); flex-shrink: 0; margin-top: 4px; }
+  .tl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted3); flex-shrink: 0; margin-top: 4px; }
   .tl-dot.new { background: var(--accent); }
   .tl-dot.notag { background: var(--accent2); }
-  .tl-text { font-size: 11px; color: var(--text); line-height: 1.5; flex: 1; }
-  .tl-text span { color: var(--muted); }
+  .tl-text { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.5; flex: 1; }
+  .tl-text span { color: var(--muted); font-weight: 400; }
   .tl-time { font-size: 9px; color: var(--muted); flex-shrink: 0; white-space: nowrap; }
 
   .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
@@ -121,7 +118,7 @@
   /* ── DESKTOP OVERRIDES ── */
   @media (min-width: 768px) {
     .topnav { display: none; }
-    .desktop-topbar { display: flex !important; align-items: center; justify-content: space-between; padding: 18px 28px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .desktop-topbar { display: flex !important; align-items: center; justify-content: space-between; padding: 18px 28px; border-bottom: 1px solid var(--border2); background: var(--bg); position: sticky; top: 0; z-index: 50; }
     .retainer-panel { margin: 16px 28px 0; }
     .active-client-bar { padding: 14px 28px 0; }
     .stats-scroll { padding: 16px 28px; gap: 12px; }
@@ -139,10 +136,9 @@
 
 <!-- MOBILE TOP NAV -->
 <div class="topnav">
-  <div class="logo">TRAKR</div>
+  <div class="logo">TR<span class="logo-accent">A</span>KR</div>
   <div class="nav-right">
     <button class="btn-sync" onclick="syncAll(this)">↺ Sync</button>
-    <a href="/settings" class="menu-btn">⚙</a>
   </div>
 </div>
 
@@ -151,7 +147,7 @@
   <div style="display:flex;align-items:center;gap:10px;">
     <div style="width:10px;height:10px;border-radius:50%;background:{{ active.brand_color }};flex-shrink:0;"></div>
     <div>
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;">{{ active.brand_name }}</div>
+      <div style="font-weight:700;font-size:15px;">{{ active.brand_name }}</div>
       <div style="font-size:10px;color:var(--muted);margin-top:1px;">
         {% if active.last_synced %}synced {{ active.last_synced | timeago }}{% else %}never synced{% endif %}
       </div>
@@ -187,7 +183,7 @@
             {{ client.posts_completed or 0 }}<em>/{{ client.post_target }}</em>
           </div>
         </div>
-        <div style="font-size:9px;color:#888;letter-spacing:0.3px;">
+        <div style="font-size:9px;color:var(--muted);letter-spacing:0.3px;">
           {% if client.period_start %}
             Started {{ client.period_start | datefmt }} ·
             {% if client.days_left is not none %}
@@ -212,9 +208,9 @@
   <div>
     <div style="display:flex;align-items:center;gap:8px;">
       <div style="width:10px;height:10px;border-radius:50%;background:{{ active.brand_color }};flex-shrink:0;"></div>
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.3px;">{{ active.brand_name }}</div>
+      <div class="client-bar-name">{{ active.brand_name }}</div>
     </div>
-    <div style="font-size:10px;color:var(--muted);margin-top:3px;padding-left:18px;">
+    <div class="client-bar-meta" style="padding-left:18px;">
       {% if active.tiktok_handle %}@{{ active.tiktok_handle }} · {% endif %}
       {% if active.last_synced %}synced {{ active.last_synced | timeago }}{% else %}never synced{% endif %}
     </div>

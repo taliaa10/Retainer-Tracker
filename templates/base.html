@@ -5,18 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Trakr{% endblock %}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
   :root {
-    --bg: #0a0a0a;
-    --surface: #111111;
-    --surface2: #181818;
-    --border: #222222;
-    --accent: #c8f135;
-    --accent2: #ff6b35;
-    --text: #f0f0f0;
-    --muted: #555;
-    --muted2: #2a2a2a;
+    --bg:        #F6F6F6;
+    --surface:   #ffffff;
+    --surface2:  #FAFAFA;
+    --border:    #F2F2F2;
+    --border2:   #F5F5F5;
+    --text:      #111111;
+    --muted:     #AAAAAA;
+    --muted2:    #CCCCCC;
+    --muted3:    #E4E4E4;
+    --accent:    #3DDC84;
+    --accent-g:  linear-gradient(90deg, #3DDC84, #C8F97F);
+    --accent2:   #F97066;
+    --amber:     #F5A623;
+    --header-bg: #111111;
+    --shadow:    0 1px 8px rgba(0,0,0,0.06);
+    --shadow-nav:0 1px 12px rgba(0,0,0,0.07);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -24,10 +31,10 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'DM Mono', monospace;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     min-height: 100vh;
     overflow-x: hidden;
-    padding-bottom: 80px;
+    padding-bottom: 90px;
   }
 
   a { text-decoration: none; color: inherit; }
@@ -35,26 +42,29 @@
   /* ── BOTTOM NAV ── */
   .bottom-nav {
     position: fixed;
-    bottom: 0; left: 0; right: 0;
+    bottom: 16px; left: 16px; right: 16px;
     background: var(--surface);
-    border-top: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 10px 8px;
+    box-shadow: var(--shadow-nav);
     display: flex;
+    justify-content: space-around;
     z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .nav-btn {
     flex: 1; display: flex; flex-direction: column;
-    align-items: center; gap: 4px; padding: 12px 0;
-    color: var(--muted); font-size: 9px; letter-spacing: 0.5px;
-    text-transform: uppercase; transition: color 0.15s; cursor: pointer;
+    align-items: center; gap: 3px;
+    padding: 6px 12px; border-radius: 12px;
+    color: var(--muted2); font-size: 8px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    transition: all 0.15s; cursor: pointer;
   }
-  .nav-btn.active { color: var(--accent); }
-  .nav-icon { font-size: 18px; line-height: 1; }
+  .nav-btn.active { background: var(--header-bg); color: var(--accent); }
+  .nav-icon { font-size: 15px; line-height: 1; }
 
   /* ── DESKTOP SIDEBAR ── */
   .sidebar-desktop { display: none; }
-
   .layout { display: block; }
 
   @media (min-width: 768px) {
@@ -68,8 +78,7 @@
     }
 
     .sidebar-desktop {
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
       background: var(--surface);
       border-right: 1px solid var(--border);
       position: sticky; top: 0; height: 100vh;
@@ -77,23 +86,24 @@
     }
 
     .sidebar-logo {
-      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px;
-      color: var(--accent); padding: 0 20px 24px;
+      font-weight: 700; font-size: 18px; letter-spacing: 0.1em;
+      color: var(--text); padding: 0 20px 24px;
       border-bottom: 1px solid var(--border);
     }
-    .sidebar-logo span { color: var(--text); }
+    .sidebar-logo .logo-accent { color: var(--accent); }
 
     .sidebar-nav { padding: 16px 0; }
 
     .sidebar-item {
       display: flex; align-items: center; gap: 8px;
-      padding: 10px 20px; font-size: 11px; color: var(--muted);
-      cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 10px 20px; font-size: 11px; font-weight: 600;
+      color: var(--muted); cursor: pointer;
+      text-transform: uppercase; letter-spacing: 0.5px;
       transition: all 0.15s;
     }
     .sidebar-item.active {
       color: var(--accent);
-      background: rgba(200,241,53,0.06);
+      background: rgba(61,220,132,0.06);
       border-left: 2px solid var(--accent);
     }
     .sidebar-item:hover:not(.active) { color: var(--text); }
@@ -101,47 +111,49 @@
 
   /* ── SHARED COMPONENTS ── */
   .btn-sync {
-    background: var(--accent); color: #0a0a0a;
-    border: none; border-radius: 6px;
-    padding: 7px 13px; font-family: 'DM Mono', monospace;
-    font-size: 10px; font-weight: 500; letter-spacing: 0.5px;
-    text-transform: uppercase; cursor: pointer;
+    background: var(--accent-g);
+    color: #111; border: none; border-radius: 20px;
+    padding: 7px 15px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
   }
   .btn-sync:hover { opacity: 0.9; }
 
   .status-badge {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 8px; border-radius: 4px;
-    font-size: 9px; letter-spacing: 0.3px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 8px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   }
-  .status-badge.live { background: rgba(200,241,53,0.1); color: var(--accent); }
-  .status-badge.pending { background: rgba(255,107,53,0.1); color: var(--accent2); }
-  .status-badge.notag { background: rgba(85,85,85,0.15); color: var(--muted); }
+  .status-badge.live   { background: #F0FBE0; color: var(--accent); }
+  .status-badge.notag  { background: #FFF1F0; color: var(--accent2); }
+  .status-badge.pending{ background: #FFF8E8; color: var(--amber); }
 
   .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-  .dot.live { background: var(--accent); }
-  .dot.pending { background: var(--accent2); }
-  .dot.notag { background: var(--muted); }
+  .dot.live    { background: var(--accent); }
+  .dot.pending { background: var(--amber); }
+  .dot.notag   { background: var(--muted2); }
 
   .filter-tab {
-    padding: 6px 13px; border-radius: 20px; font-size: 10px;
-    letter-spacing: 0.4px; text-transform: uppercase; cursor: pointer;
-    border: 1px solid var(--border); color: var(--muted);
-    white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 10px; font-weight: 600;
+    border: 1px solid var(--muted3); color: var(--muted);
+    background: transparent; white-space: nowrap; flex-shrink: 0;
+    transition: all 0.15s; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
-  .filter-tab.active { color: var(--accent); border-color: rgba(200,241,53,0.4); background: rgba(200,241,53,0.07); }
+  .filter-tab.active { background: var(--header-bg); color: var(--accent); border-color: var(--header-bg); }
 
   .date-pill {
-    padding: 6px 11px; background: var(--surface);
-    border: 1px solid var(--border); border-radius: 20px;
-    font-size: 10px; color: var(--muted); white-space: nowrap;
+    font-size: 10px; font-weight: 600; color: var(--text);
+    background: var(--muted3); padding: 5px 11px; border-radius: 20px;
+    white-space: nowrap;
   }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-
   @keyframes fadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
@@ -156,12 +168,12 @@
 
   <!-- DESKTOP SIDEBAR -->
   <div class="sidebar-desktop">
-    <div class="sidebar-logo">TRAKR</div>
+    <div class="sidebar-logo">TR<span class="logo-accent">A</span>KR</div>
     <div class="sidebar-nav">
       <a href="/"         class="sidebar-item {% if page == 'dashboard' %}active{% endif %}">▦ Dashboard</a>
       <a href="/videos"   class="sidebar-item {% if page == 'videos'    %}active{% endif %}">◈ Videos</a>
       <a href="/products" class="sidebar-item {% if page == 'products'  %}active{% endif %}">◉ Products</a>
-      <a href="/settings" class="sidebar-item {% if page == 'settings'  %}active{% endif %}">◎ Settings</a>
+      <a href="/settings" class="sidebar-item {% if page == 'settings'  %}active{% endif %}">⚙ Settings</a>
     </div>
   </div>
 
@@ -177,7 +189,7 @@
   <a href="/"         class="nav-btn {% if page == 'dashboard' %}active{% endif %}"><div class="nav-icon">▦</div><div>Dash</div></a>
   <a href="/videos"   class="nav-btn {% if page == 'videos'    %}active{% endif %}"><div class="nav-icon">◈</div><div>Videos</div></a>
   <a href="/products" class="nav-btn {% if page == 'products'  %}active{% endif %}"><div class="nav-icon">◉</div><div>Products</div></a>
-  <a href="/settings" class="nav-btn {% if page == 'settings'  %}active{% endif %}"><div class="nav-icon">◎</div><div>Settings</div></a>
+  <a href="/settings" class="nav-btn {% if page == 'settings'  %}active{% endif %}"><div class="nav-icon">⚙</div><div>Settings</div></a>
 </div>
 
 {% block scripts %}{% endblock %}
