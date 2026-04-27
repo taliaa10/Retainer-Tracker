@@ -85,11 +85,11 @@
   .metric-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: -0.5px; color: var(--text); }
   .metric-val.green { color: var(--accent); }
   .metric-sub { font-size: 8px; color: var(--muted); margin-top: 1px; }
-  .product-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; }
-  .product-icon { width: 26px; height: 26px; border-radius: 5px; background: var(--muted2); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
-  .product-details { flex: 1; min-width: 0; }
-  .product-name-sm { font-size: 10px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .product-id-tag { font-size: 8px; color: var(--muted); margin-top: 1px; }
+  .product-row { display: flex; align-items: center; gap: 6px; padding: 7px 10px; flex-wrap: wrap; }
+  .product-chip { display: flex; align-items: center; gap: 5px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 7px 3px 4px; min-width: 0; }
+  .product-chip-img { width: 22px; height: 22px; border-radius: 3px; object-fit: cover; flex-shrink: 0; }
+  .product-chip-icon { width: 22px; height: 22px; border-radius: 3px; background: var(--muted2); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+  .product-chip-name { font-size: 10px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
   .no-product-label { font-size: 9px; color: var(--muted); font-style: italic; }
   .gmv-pill { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent); white-space: nowrap; flex-shrink: 0; }
 
@@ -315,19 +315,26 @@
         </div>
       </div>
       <div class="product-row">
-        {% if v.tagged_product_id %}
-        <div class="product-icon">📦</div>
-        <div class="product-details">
-          <div class="product-name-sm">{{ v.product_name or v.tagged_product_id }}</div>
-          <div class="product-id-tag">ID: {{ v.tagged_product_id }}</div>
-        </div>
-        {% if v.gmv %}
-        <div class="gmv-pill">{{ v.gmv | gmv }}</div>
-        {% endif %}
+        {% set all_pids = (v.all_product_ids | fromjson) if v.all_product_ids else ([v.tagged_product_id] if v.tagged_product_id else []) %}
+        {% if all_pids %}
+          {% for pid in all_pids %}
+          {% set pinfo = products_info.get(pid, {}) %}
+          <div class="product-chip">
+            {% if pinfo.get('thumbnail_url') %}
+            <img src="{{ pinfo.thumbnail_url }}" class="product-chip-img" alt=""
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="product-chip-icon" style="display:none">📦</div>
+            {% else %}
+            <div class="product-chip-icon">📦</div>
+            {% endif %}
+            <div class="product-chip-name">{{ pinfo.get('product_name') or ('Product …' + pid[-6:]) }}</div>
+          </div>
+          {% endfor %}
+          {% if v.gmv %}
+          <div class="gmv-pill" style="margin-left:auto">{{ v.gmv | gmv }}</div>
+          {% endif %}
         {% else %}
-        <div class="product-details">
-          <div class="no-product-label">⚠ No product tagged — {{ v.views | num }} views unmonetized</div>
-        </div>
+        <div class="no-product-label">⚠ No product tagged — {{ v.views | num }} views unmonetized</div>
         {% endif %}
       </div>
     </div>

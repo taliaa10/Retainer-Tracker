@@ -130,13 +130,19 @@ def init_db():
                 )
             """)
 
-    # Drop NOT NULL on client_id for existing tables (idempotent migration)
-    try:
-        with get_conn() as conn:
-            with conn.cursor() as cur:
-                cur.execute("ALTER TABLE videos ALTER COLUMN client_id DROP NOT NULL")
-    except Exception:
-        pass
+    # Idempotent migrations
+    migrations = [
+        "ALTER TABLE videos ALTER COLUMN client_id DROP NOT NULL",
+        "ALTER TABLE products ADD COLUMN IF NOT EXISTS thumbnail_url TEXT",
+        "ALTER TABLE video_metrics ADD COLUMN IF NOT EXISTS all_product_ids TEXT",
+    ]
+    for sql in migrations:
+        try:
+            with get_conn() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(sql)
+        except Exception:
+            pass
 
 
 # ── SETTINGS ─────────────────────────────────────────────────────────────────
@@ -157,6 +163,12 @@ def get_products_map():
     """Returns {product_id: client_id} for all active products."""
     rows = fetchall("SELECT product_id, client_id FROM products WHERE is_active = TRUE")
     return {r['product_id']: r['client_id'] for r in rows}
+
+
+def get_products_info_map():
+    """Returns {product_id: {name, thumbnail_url, client_id}} for all active products."""
+    rows = fetchall("SELECT product_id, product_name, thumbnail_url, client_id FROM products WHERE is_active = TRUE")
+    return {r['product_id']: dict(r) for r in rows}
 
 
 # ── CLIENTS ──────────────────────────────────────────────────────────────────
@@ -315,12 +327,28 @@ def get_product_summary_stats():
     """)
 
 
-def add_product(client_id, product_id, product_name):
+def add_product(client_id, product_id, product_name, thumbnail_url=None):
     execute(
-        "INSERT INTO products (client_id, product_id, product_name) VALUES (%s, %s, %s) "
-        "ON CONFLICT (client_id, product_id) DO UPDATE SET is_active=TRUE, product_name=EXCLUDED.product_name",
-        (client_id, product_id, product_name)
+        "INSERT INTO products (client_id, product_id, product_name, thumbnail_url) VALUES (%s, %s, %s, %s) "
+        "ON CONFLICT (client_id, product_id) DO UPDATE SET is_active=TRUE, "
+        "product_name=EXCLUDED.product_name, "
+        "thumbnail_url=COALESCE(EXCLUDED.thumbnail_url, products.thumbnail_url)",
+        (client_id, product_id, product_name, thumbnail_url)
     )
+
+
+def update_product_info(product_id, product_name=None, thumbnail_url=None):
+    """Update name/thumbnail for a product if we have new data."""
+    if product_name:
+        execute(
+            "UPDATE products SET product_name=%s WHERE product_id=%s AND (product_name IS NULL OR product_name LIKE 'Product %%')",
+            (product_name, product_id)
+        )
+    if thumbnail_url:
+        execute(
+            "UPDATE products SET thumbnail_url=%s WHERE product_id=%s AND thumbnail_url IS NULL",
+            (thumbnail_url, product_id)
+        )
 
 
 def delete_product(product_id):
@@ -492,17 +520,20 @@ def upsert_video(client_id, video_id, description, cover_url, duration, posted_a
     """, (client_id, video_id, description, cover_url, duration, posted_at))
 
 
-def upsert_video_metrics(video_id, views, likes, comments, tagged_product_id):
+def upsert_video_metrics(video_id, views, likes, comments, tagged_product_id, all_product_ids=None):
+    import json as _json
+    all_pids_json = _json.dumps(all_product_ids) if all_product_ids else None
     execute("""
-        INSERT INTO video_metrics (video_id, views, likes, comments, tagged_product_id, recorded_at)
-        VALUES (%s, %s, %s, %s, %s, NOW())
+        INSERT INTO video_metrics (video_id, views, likes, comments, tagged_product_id, all_product_ids, recorded_at)
+        VALUES (%s, %s, %s, %s, %s, %s, NOW())
         ON CONFLICT (video_id) DO UPDATE SET
             views              = EXCLUDED.views,
             likes              = EXCLUDED.likes,
             comments           = EXCLUDED.comments,
             tagged_product_id  = EXCLUDED.tagged_product_id,
+            all_product_ids    = EXCLUDED.all_product_ids,
             recorded_at        = NOW()
-    """, (video_id, views, likes, comments, tagged_product_id))
+    """, (video_id, views, likes, comments, tagged_product_id, all_pids_json))
 
 
 def log_sync(client_id, status, videos_fetched=0):

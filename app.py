@@ -19,6 +19,17 @@ app = Flask(__name__)
 
 # ── TEMPLATE FILTERS ──────────────────────────────────────────────────────────
 
+@app.template_filter('fromjson')
+def fmt_fromjson(s):
+    if not s:
+        return []
+    try:
+        import json as _json
+        return _json.loads(s)
+    except Exception:
+        return []
+
+
 @app.template_filter('num')
 def fmt_num(n):
     if n is None:
@@ -106,6 +117,7 @@ def dashboard():
     videos = db.get_client_videos(active['id'], filter_type=filter_type, limit=30)
     top_products = db.get_top_products(active['id'])
     recent = db.get_recent_activity(active['id'])
+    products_info = db.get_products_info_map()
     today = date.today()
 
     return render_template(
@@ -119,6 +131,7 @@ def dashboard():
         active_period=active_period,
         today=today,
         filter_type=filter_type,
+        products_info=products_info,
     )
 
 
@@ -220,9 +233,9 @@ def delete_client(client_id):
 def add_product():
     client_id = int(request.form['client_id'])
     product_id = request.form['product_id'].strip()
-    # Try to auto-fill product name from TikHub
-    product_name = tikhub.lookup_product_name(product_id) or f"Product {product_id}"
-    db.add_product(client_id, product_id, product_name)
+    name, thumbnail_url = tikhub.lookup_product_info(product_id)
+    product_name = name or f"Product {product_id}"
+    db.add_product(client_id, product_id, product_name, thumbnail_url)
     return redirect(url_for('settings'))
 
 

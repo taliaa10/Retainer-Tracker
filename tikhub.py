@@ -53,19 +53,34 @@ def fetch_video_detail(video_id):
     )
 
 
-def lookup_product_name(product_id):
-    """Try to resolve a product name from TikHub. Returns None if unavailable."""
+def lookup_product_info(product_id):
+    """Try to fetch product name + thumbnail from TikHub.
+    Returns (name, thumbnail_url) — either/both may be None."""
     try:
         data = _get(
             "/api/v1/tiktok/app/v3/fetch_product_detail",
             {"product_id": product_id}
         )
-        return (
-            data.get("data", {}).get("product", {}).get("title")
-            or data.get("data", {}).get("title")
-        )
+        product = data.get("data", {}).get("product", {}) or data.get("data", {})
+        name = product.get("title") or product.get("name")
+        # Try common image field shapes
+        images = product.get("images") or product.get("image_list") or []
+        thumbnail_url = None
+        if isinstance(images, list) and images:
+            img = images[0]
+            if isinstance(img, dict):
+                urls = img.get("url_list") or img.get("thumb_url_list") or []
+                thumbnail_url = urls[0] if urls else img.get("url") or img.get("thumb_url")
+            elif isinstance(img, str):
+                thumbnail_url = img
+        return name, thumbnail_url
     except Exception:
-        return None
+        return None, None
+
+
+def lookup_product_name(product_id):
+    name, _ = lookup_product_info(product_id)
+    return name
 
 
 def parse_videos(data):

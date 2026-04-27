@@ -80,7 +80,18 @@ def sync_creator():
                     likes=v["likes"],
                     comments=v["comments"],
                     tagged_product_id=tagged_product_id,
+                    all_product_ids=all_pids or None,
                 )
+
+                # Try to enrich product info (name/thumbnail) for any new product IDs
+                for pid in all_pids:
+                    try:
+                        name, thumb = tikhub.lookup_product_info(pid)
+                        if name or thumb:
+                            db.update_product_info(pid, name, thumb)
+                        time.sleep(0.2)
+                    except Exception:
+                        pass
 
             total_fetched += len(videos)
 
