@@ -530,8 +530,8 @@ def upsert_video_metrics(video_id, views, likes, comments, tagged_product_id, al
             views              = EXCLUDED.views,
             likes              = EXCLUDED.likes,
             comments           = EXCLUDED.comments,
-            tagged_product_id  = EXCLUDED.tagged_product_id,
-            all_product_ids    = EXCLUDED.all_product_ids,
+            tagged_product_id  = COALESCE(EXCLUDED.tagged_product_id, video_metrics.tagged_product_id),
+            all_product_ids    = COALESCE(EXCLUDED.all_product_ids, video_metrics.all_product_ids),
             recorded_at        = NOW()
     """, (video_id, views, likes, comments, tagged_product_id, all_pids_json))
 
