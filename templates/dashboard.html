@@ -115,6 +115,9 @@
   .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
   .empty-state a { color: var(--accent); }
 
+  .btn-gmv { background: var(--surface); color: var(--text); border: 1px solid var(--muted3); }
+  .btn-gmv:hover { opacity: 0.85; }
+
   /* ── DESKTOP OVERRIDES ── */
   @media (min-width: 768px) {
     .topnav { display: none; }
@@ -138,6 +141,7 @@
 <div class="topnav">
   <div class="logo">TR<span class="logo-accent">A</span>KR</div>
   <div class="nav-right">
+    <button class="btn-sync btn-gmv" onclick="syncGMV(this)">$ GMV</button>
     <button class="btn-sync" onclick="syncAll(this)">↺ Sync</button>
   </div>
 </div>
@@ -157,6 +161,7 @@
     {% if active_period %}
     <div class="date-pill">{{ active_period.period_start | datefmt }} – {{ today | datefmt }}</div>
     {% endif %}
+    <button class="btn-sync btn-gmv" onclick="syncGMV(this)">$ Sync GMV</button>
     <button class="btn-sync" onclick="syncClient({{ active.id }}, this)">↺ Sync Now</button>
   </div>
 </div>
@@ -404,6 +409,15 @@ function syncAll(btn) {
     .then(r => r.json())
     .then(d => { location.reload(); })
     .catch(() => { btn.textContent = '↺ Sync'; btn.disabled = false; });
+}
+
+function syncGMV(btn) {
+  btn.textContent = '⏳ Syncing…';
+  btn.disabled = true;
+  fetch('/api/sync/gmv', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { location.reload(); })
+    .catch(() => { btn.textContent = '$ GMV'; btn.disabled = false; });
 }
 
 function syncClient(clientId, btn) {
