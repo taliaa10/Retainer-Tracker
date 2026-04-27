@@ -58,7 +58,7 @@ def lookup_product_info(product_id):
     Returns (name, thumbnail_url) — either/both may be None."""
     try:
         data = _get(
-            "/api/v1/tiktok/app/v3/fetch_product_detail",
+            "/api/v1/tiktok/app/v3/fetch_product_detail_v4",
             {"product_id": product_id}
         )
         product = data.get("data", {}).get("product", {}) or data.get("data", {})
