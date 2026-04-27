@@ -210,7 +210,7 @@ def parse_video_product_stats(data):
     """Sum timed_stats from the first segment only.
     The API returns 2 segments: segment[0] is the all-time summary,
     segment[1] is the same period broken down daily. Using both double-counts."""
-    segments = data.get("data", {}).get("segments") or []
+    segments = data.get("data", {}).get("data", {}).get("segments") or []
     if not segments:
         return {"gmv": 0.0, "orders": 0, "product_views": 0, "product_clicks": 0}
     gmv = 0.0
