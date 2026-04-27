@@ -207,19 +207,22 @@ def fetch_video_product_stats(item_id, product_id, start_date):
 
 
 def parse_video_product_stats(data):
-    """Sum timed_stats segments → {gmv, orders, product_views, product_clicks}."""
+    """Sum timed_stats from the first segment only.
+    The API returns 2 segments: segment[0] is the all-time summary,
+    segment[1] is the same period broken down daily. Using both double-counts."""
     segments = data.get("data", {}).get("segments") or []
+    if not segments:
+        return {"gmv": 0.0, "orders": 0, "product_views": 0, "product_clicks": 0}
     gmv = 0.0
     orders = 0
     product_views = 0
     product_clicks = 0
-    for seg in segments:
-        for ts in (seg.get("timed_stats") or []):
-            s = ts.get("stats") or {}
-            gmv += float((s.get("product_revenue") or {}).get("amount") or 0)
-            orders += int(s.get("order_cnt") or 0)
-            product_views += int(s.get("product_view_cnt") or 0)
-            product_clicks += int(s.get("product_click_cnt") or 0)
+    for ts in (segments[0].get("timed_stats") or []):
+        s = ts.get("stats") or {}
+        gmv += float((s.get("product_revenue") or {}).get("amount") or 0)
+        orders += int(s.get("order_cnt") or 0)
+        product_views += int(s.get("product_view_cnt") or 0)
+        product_clicks += int(s.get("product_click_cnt") or 0)
     return {
         "gmv": round(gmv, 2),
         "orders": orders,
