@@ -337,18 +337,11 @@ def add_product(client_id, product_id, product_name, thumbnail_url=None):
     )
 
 
-def update_product_info(product_id, product_name=None, thumbnail_url=None):
-    """Update name/thumbnail for a product if we have new data."""
-    if product_name:
-        execute(
-            "UPDATE products SET product_name=%s WHERE product_id=%s AND (product_name IS NULL OR product_name LIKE 'Product %%')",
-            (product_name, product_id)
-        )
-    if thumbnail_url:
-        execute(
-            "UPDATE products SET thumbnail_url=%s WHERE product_id=%s AND thumbnail_url IS NULL",
-            (thumbnail_url, product_id)
-        )
+def set_product_info(product_db_id, product_name, thumbnail_url):
+    execute(
+        "UPDATE products SET product_name=%s, thumbnail_url=%s WHERE id=%s",
+        (product_name or None, thumbnail_url or None, product_db_id)
+    )
 
 
 def delete_product(product_id):

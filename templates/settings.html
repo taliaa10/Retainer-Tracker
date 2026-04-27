@@ -60,10 +60,18 @@
   .history-badge.active { background: rgba(77,159,255,0.1); color: #4d9fff; }
   .history-badge.overdue { background: rgba(255,68,68,0.1); color: #ff4444; }
 
-  .product-list-sm { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
-  .product-item { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
-  .product-item-name { font-size: 11px; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .product-item-id { font-size: 9px; color: var(--muted); }
+  .product-list-sm { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .product-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .product-item-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer; }
+  .product-thumb { width: 36px; height: 36px; border-radius: 5px; object-fit: cover; background: var(--muted2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
+  .product-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .product-item-info { flex: 1; min-width: 0; }
+  .product-item-name { font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .product-item-id { font-size: 9px; color: var(--muted); margin-top: 1px; }
+  .product-edit-form { border-top: 1px solid var(--border); padding: 10px; display: none; }
+  .product-edit-form.open { display: block; }
+  .product-edit-form .form-row { gap: 6px; }
+  .product-edit-form .form-group input { font-size: 10px; padding: 6px 8px; }
 
   .add-client-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
 
@@ -232,13 +240,42 @@
           <div class="product-list-sm">
             {% for product in cd.products %}
             <div class="product-item">
-              <div>
-                <div class="product-item-name">{{ product.product_name or product.product_id }}</div>
-                <div class="product-item-id">ID: {{ product.product_id }}</div>
+              <div class="product-item-row" onclick="toggleProductEdit('pe-{{ product.id }}')">
+                <div class="product-thumb">
+                  {% if product.thumbnail_url %}
+                  <img src="{{ product.thumbnail_url }}" alt=""
+                       onerror="this.style.display='none';this.parentElement.textContent='📦'"/>
+                  {% else %}📦{% endif %}
+                </div>
+                <div class="product-item-info">
+                  <div class="product-item-name">{{ product.product_name or product.product_id }}</div>
+                  <div class="product-item-id">ID: {{ product.product_id }}</div>
+                </div>
+                <form method="POST" action="/settings/products/{{ product.id }}/delete"
+                      onclick="event.stopPropagation()"
+                      onsubmit="return confirm('Remove this product?')">
+                  <button type="submit" class="btn btn-danger" style="padding:4px 8px;font-size:9px;">✕</button>
+                </form>
               </div>
-              <form method="POST" action="/settings/products/{{ product.id }}/delete">
-                <button type="submit" class="btn btn-danger" style="padding:4px 8px;font-size:9px;">✕</button>
-              </form>
+              <div class="product-edit-form" id="pe-{{ product.id }}">
+                <form method="POST" action="/settings/products/{{ product.id }}/update">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label>Product Name</label>
+                      <input type="text" name="product_name" value="{{ product.product_name or '' }}" placeholder="e.g. Forchics Lash Serum">
+                    </div>
+                  </div>
+                  <div class="form-row" style="margin-top:6px;">
+                    <div class="form-group">
+                      <label>Thumbnail URL</label>
+                      <input type="text" name="thumbnail_url" value="{{ product.thumbnail_url or '' }}" placeholder="https://...">
+                    </div>
+                  </div>
+                  <div style="margin-top:8px;">
+                    <button type="submit" class="btn btn-primary" style="font-size:9px;padding:5px 11px;">Save</button>
+                  </div>
+                </form>
+              </div>
             </div>
             {% endfor %}
           </div>
@@ -321,6 +358,11 @@
   if (cards.length === 1) {
     const id = cards[0].id.replace('client-body-', '');
     toggleClient(id);
+  }
+
+  function toggleProductEdit(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('open');
   }
 </script>
 {% endblock %}

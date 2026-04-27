@@ -239,6 +239,16 @@ def add_product():
     return redirect(url_for('settings'))
 
 
+@app.route('/settings/products/<int:product_db_id>/update', methods=['POST'])
+def update_product(product_db_id):
+    db.set_product_info(
+        product_db_id,
+        request.form.get('product_name', '').strip(),
+        request.form.get('thumbnail_url', '').strip(),
+    )
+    return redirect(url_for('settings'))
+
+
 @app.route('/settings/products/<int:product_db_id>/delete', methods=['POST'])
 def delete_product(product_db_id):
     db.delete_product(product_db_id)
