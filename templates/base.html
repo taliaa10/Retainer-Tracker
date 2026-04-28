@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Trakr{% endblock %}</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111111'/%3E%3Ctext x='32' y='47' font-family='Arial Black,Arial,sans-serif' font-weight='900' font-size='38' fill='%233DDC84' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111111'/%3E%3Ctext x='32' y='47' font-family='Arial Black,Arial,sans-serif' font-weight='900' font-size='38' fill='%233DDC84' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
@@ -173,6 +175,7 @@
       <a href="/"         class="sidebar-item {% if page == 'dashboard' %}active{% endif %}">▦ Dashboard</a>
       <a href="/videos"   class="sidebar-item {% if page == 'videos'    %}active{% endif %}">◈ Videos</a>
       <a href="/products" class="sidebar-item {% if page == 'products'  %}active{% endif %}">◉ Products</a>
+      <a href="/reports"  class="sidebar-item {% if page == 'reports'   %}active{% endif %}">↓ Reports</a>
       <a href="/settings" class="sidebar-item {% if page == 'settings'  %}active{% endif %}">◎ Settings</a>
     </div>
   </div>
@@ -189,6 +192,7 @@
   <a href="/"         class="nav-btn {% if page == 'dashboard' %}active{% endif %}"><div class="nav-icon">▦</div><div>Dash</div></a>
   <a href="/videos"   class="nav-btn {% if page == 'videos'    %}active{% endif %}"><div class="nav-icon">◈</div><div>Videos</div></a>
   <a href="/products" class="nav-btn {% if page == 'products'  %}active{% endif %}"><div class="nav-icon">◉</div><div>Products</div></a>
+  <a href="/reports"  class="nav-btn {% if page == 'reports'   %}active{% endif %}"><div class="nav-icon">↓</div><div>Reports</div></a>
   <a href="/settings" class="nav-btn {% if page == 'settings'  %}active{% endif %}"><div class="nav-icon">◎</div><div>Settings</div></a>
 </div>
 
