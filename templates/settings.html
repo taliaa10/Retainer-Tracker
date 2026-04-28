@@ -295,6 +295,30 @@
           </form>
         </div>
 
+        <!-- SHAREABLE LINK -->
+        <div class="client-section">
+          <div class="client-section-title">Shareable Brand Page</div>
+          {% if cd.share_token %}
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">
+            Send this link to {{ cd.brand_name }}. Only their videos and data are visible — no login required.
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input type="text" readonly
+                   value="{{ request.host_url }}brand/{{ cd.share_token }}"
+                   id="share-link-{{ cd.id }}"
+                   style="flex:1;min-width:180px;background:var(--bg);border:1px solid var(--muted3);border-radius:8px;color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;padding:7px 10px;outline:none;">
+            <button type="button" class="btn btn-secondary" onclick="copyShareLink({{ cd.id }})">Copy Link</button>
+            <a href="/brand/{{ cd.share_token }}" target="_blank" class="btn btn-ghost">Preview ↗</a>
+          </div>
+          <form method="POST" action="/settings/clients/{{ cd.id }}/token/regenerate" style="margin-top:8px;"
+                onsubmit="return confirm('Regenerate link? The old link will stop working.')">
+            <button type="submit" class="btn btn-ghost" style="font-size:9px;padding:5px 11px;">↺ Regenerate Link</button>
+          </form>
+          {% else %}
+          <div style="font-size:11px;color:var(--muted);">No share link yet — save the client to generate one.</div>
+          {% endif %}
+        </div>
+
         <!-- DELETE CLIENT -->
         <div class="client-section" style="background:rgba(255,68,68,0.03);">
           <div class="client-section-title" style="color:#ff4444;">Danger Zone</div>
@@ -365,6 +389,20 @@
   function toggleProductEdit(id) {
     const el = document.getElementById(id);
     el.classList.toggle('open');
+  }
+
+  function copyShareLink(clientId) {
+    const input = document.getElementById('share-link-' + clientId);
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value).then(() => {
+      const btn = input.nextElementSibling;
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = orig; }, 1800);
+    }).catch(() => {
+      document.execCommand('copy');
+    });
   }
 </script>
 {% endblock %}

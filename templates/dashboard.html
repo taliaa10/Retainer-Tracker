@@ -25,6 +25,7 @@
     display: flex; align-items: center; gap: 12px;
     padding: 11px 14px; border-bottom: 1px solid var(--border2);
     cursor: pointer; transition: background 0.15s; position: relative;
+    user-select: none;
   }
   .retainer-row:last-child { border-bottom: none; }
   .retainer-row:hover { background: var(--surface2); }
@@ -34,6 +35,10 @@
     width: 3px; border-radius: 0 2px 2px 0;
     background: var(--row-color, #ddd);
   }
+  .retainer-row.dragging { opacity: 0.4; }
+  .retainer-row.drag-over { background: rgba(61,220,132,0.07); }
+  .drag-handle { color: var(--muted3); font-size: 11px; cursor: grab; flex-shrink: 0; padding: 0 2px; line-height: 1; }
+  .drag-handle:active { cursor: grabbing; }
 
   .retainer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .retainer-name { font-size: 12px; font-weight: 500; color: var(--text); width: 76px; flex-shrink: 0; }
@@ -118,6 +123,19 @@
   .btn-gmv { background: var(--surface); color: var(--text); border: 1px solid var(--muted3); }
   .btn-gmv:hover { opacity: 0.85; }
 
+  .period-selector-wrap { padding: 0 16px 14px; }
+  .period-selector {
+    appearance: none;
+    background: var(--surface); border: 1px solid var(--muted3); border-radius: 20px;
+    color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px; font-weight: 600;
+    padding: 5px 28px 5px 12px; outline: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23AAAAAA'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    transition: border-color 0.15s;
+  }
+  .period-selector:focus { border-color: var(--accent); }
+
   /* ── DESKTOP OVERRIDES ── */
   @media (min-width: 768px) {
     .topnav { display: none; }
@@ -128,6 +146,7 @@
     .stat-card { min-width: 0; flex: 1; }
     .section-label { padding: 0 28px 12px; }
     .filter-row { padding: 0 28px 14px; }
+    .period-selector-wrap { padding: 0 28px 14px; }
     .video-list { padding: 0 28px; }
     .panels { padding: 20px 28px 28px; flex-direction: row; }
     .panel { flex: 1; }
@@ -174,9 +193,12 @@
   </div>
 
   {% for client in clients %}
-  <a href="/?client={{ client.id }}" style="display:block;">
-    <div class="retainer-row {% if client.id == active.id %}active{% endif %}"
-         style="--row-color:{{ client.brand_color }};">
+  <div class="retainer-row {% if client.id == active.id %}active{% endif %}"
+       data-client-id="{{ client.id }}"
+       style="--row-color:{{ client.brand_color }};"
+       draggable="true">
+    <div class="drag-handle" title="Drag to reorder">⠿</div>
+    <a href="/?client={{ client.id }}" style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-decoration:none;color:inherit;">
       <div class="retainer-dot" style="background:{{ client.brand_color }};"></div>
       <div class="retainer-name">{{ client.brand_name }}</div>
       <div style="flex:1;min-width:0;">
@@ -203,8 +225,8 @@
           {% endif %}
         </div>
       </div>
-    </div>
-  </a>
+    </a>
+  </div>
   {% endfor %}
 </div>
 
@@ -259,11 +281,25 @@
 </div>
 
 <div class="section-label">Video Performance</div>
+{% set period_param = '&period=' ~ selected_period.id if selected_period else '' %}
 <div class="filter-row">
-  <a href="/?client={{ active.id }}"                         class="filter-tab {% if not filter_type %}active{% endif %}">All</a>
-  <a href="/?client={{ active.id }}&filter=tagged"           class="filter-tab {% if filter_type == 'tagged' %}active{% endif %}">Has Product</a>
-  <a href="/?client={{ active.id }}&filter=untagged"         class="filter-tab {% if filter_type == 'untagged' %}active{% endif %}">No Product</a>
+  <a href="/?client={{ active.id }}{{ period_param }}"                         class="filter-tab {% if not filter_type %}active{% endif %}">All</a>
+  <a href="/?client={{ active.id }}{{ period_param }}&filter=tagged"           class="filter-tab {% if filter_type == 'tagged' %}active{% endif %}">Has Product</a>
+  <a href="/?client={{ active.id }}{{ period_param }}&filter=untagged"         class="filter-tab {% if filter_type == 'untagged' %}active{% endif %}">No Product</a>
 </div>
+
+{% if all_periods %}
+<div class="period-selector-wrap">
+  <select class="period-selector" onchange="selectPeriod(this.value)">
+    <option value="">All time</option>
+    {% for p in all_periods %}
+    <option value="{{ p.id }}" {% if selected_period and p.id == selected_period.id %}selected{% endif %}>
+      {{ p.period_start | datefmt }} – {{ p.period_end | datefmt }}{% if p.status == 'active' %} (Active){% elif p.status == 'completed' %} (Completed){% endif %}
+    </option>
+    {% endfor %}
+  </select>
+</div>
+{% endif %}
 
 <!-- VIDEO CARDS -->
 <div class="video-list">
@@ -428,5 +464,65 @@ function syncClient(clientId, btn) {
     .then(d => { location.reload(); })
     .catch(() => { btn.textContent = '↺ Sync Now'; btn.disabled = false; });
 }
+
+function selectPeriod(periodId) {
+  const url = new URL(window.location.href);
+  if (periodId) {
+    url.searchParams.set('period', periodId);
+  } else {
+    url.searchParams.delete('period');
+  }
+  url.searchParams.delete('filter');
+  window.location.href = url.toString();
+}
+
+// ── DRAG-TO-REORDER RETAINER ROWS ──
+(function() {
+  const container = document.querySelector('.retainer-panel');
+  if (!container) return;
+  let dragSrc = null;
+
+  container.querySelectorAll('.retainer-row[draggable]').forEach(row => {
+    row.addEventListener('dragstart', e => {
+      dragSrc = row;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      container.querySelectorAll('.retainer-row').forEach(r => r.classList.remove('drag-over'));
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (row !== dragSrc) {
+        container.querySelectorAll('.retainer-row').forEach(r => r.classList.remove('drag-over'));
+        row.classList.add('drag-over');
+      }
+    });
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragSrc && dragSrc !== row) {
+        const rows = [...container.querySelectorAll('.retainer-row[data-client-id]')];
+        const srcIdx = rows.indexOf(dragSrc);
+        const tgtIdx = rows.indexOf(row);
+        if (srcIdx < tgtIdx) row.after(dragSrc);
+        else row.before(dragSrc);
+        saveOrder();
+      }
+      row.classList.remove('drag-over');
+    });
+  });
+
+  function saveOrder() {
+    const ids = [...container.querySelectorAll('.retainer-row[data-client-id]')]
+      .map(r => parseInt(r.dataset.clientId));
+    fetch('/api/clients/reorder', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({order: ids})
+    });
+  }
+})();
 </script>
 {% endblock %}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% set page = 'reports' %}
+
+{% block title %}Trakr — Reports{% endblock %}
+
+{% block extra_css %}
+  .topnav { position: sticky; top: 0; z-index: 100; background: var(--header-bg); padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-weight: 800; font-size: 15px; letter-spacing: 0.12em; color: #fff; text-transform: uppercase; }
+  .logo .logo-accent { color: var(--accent); }
+  .page-title { font-weight: 700; font-size: 14px; color: #fff; }
+
+  .reports-body { padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; max-width: 640px; }
+
+  .section-header { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border2); }
+
+  .report-card { background: var(--surface); box-shadow: var(--shadow); border-radius: 16px; padding: 20px; }
+
+  .select-wrap { position: relative; }
+  .select-wrap select {
+    appearance: none;
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--muted3);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 36px 10px 12px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .select-wrap select:focus { border-color: var(--accent); }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+    font-size: 12px;
+  }
+
+  .form-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; display: block; }
+
+  .btn-dl {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 20px; border-radius: 10px;
+    background: var(--accent-g); color: #111;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px; font-weight: 700;
+    border: none; cursor: pointer;
+    width: 100%; justify-content: center;
+    margin-top: 16px; transition: opacity 0.15s;
+  }
+  .btn-dl:hover { opacity: 0.88; }
+  .btn-dl:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .preview-box { background: var(--bg); border: 1px solid var(--border2); border-radius: 12px; padding: 16px; margin-top: 16px; display: none; }
+  .preview-box.show { display: block; }
+  .preview-title { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 12px; }
+  .preview-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border2); font-size: 12px; }
+  .preview-row:last-child { border-bottom: none; }
+  .preview-label { color: var(--muted); font-size: 11px; }
+  .preview-value { font-weight: 700; color: var(--text); }
+  .preview-value.green { color: var(--accent); }
+
+  .info-note { font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 4px; }
+
+  @media (min-width: 768px) {
+    .topnav { display: none; }
+    .desktop-topbar { display: flex !important; align-items: center; padding: 18px 28px; border-bottom: 1px solid var(--border2); background: var(--bg); position: sticky; top: 0; z-index: 50; }
+    .reports-body { padding: 24px 28px; }
+  }
+  .desktop-topbar { display: none; }
+{% endblock %}
+
+{% block content %}
+
+<div class="topnav">
+  <div class="logo">TR<span class="logo-accent">A</span>KR</div>
+  <div class="page-title">Reports</div>
+  <div style="width:50px;"></div>
+</div>
+
+<div class="desktop-topbar">
+  <div style="font-weight:700;font-size:16px;">Reports</div>
+</div>
+
+<div class="reports-body">
+  <div class="report-card">
+    <div class="section-header">Export Brand Report</div>
+    <p class="info-note">Select a brand and one of its retainer periods. The report exports as an .xlsx spreadsheet with a summary sheet and a full video breakdown.</p>
+
+    <div style="margin-top:16px;">
+      <label class="form-label">Brand</label>
+      <div class="select-wrap">
+        <select id="brand-select" onchange="onBrandChange(this.value)">
+          <option value="">— Select a brand —</option>
+          {% for c in clients %}
+          <option value="{{ c.id }}" {% if active_client_id == c.id %}selected{% endif %}>{{ c.brand_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div id="period-wrap" style="margin-top:12px;{% if not periods %}display:none;{% endif %}">
+      <label class="form-label">Retainer Period</label>
+      <div class="select-wrap">
+        <select id="period-select" onchange="onPeriodChange(this.value)">
+          <option value="">— Select a period —</option>
+          {% for p in periods %}
+          <option value="{{ p.id }}"
+                  data-start="{{ p.period_start }}"
+                  data-end="{{ p.period_end }}"
+                  data-status="{{ p.status }}"
+                  data-target="{{ p.target_posts }}">
+            {{ p.period_start | datefmt }} – {{ p.period_end | datefmt }}
+            {% if p.status == 'active' %} (Active){% elif p.status == 'completed' %} (Completed){% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="preview-box" id="preview-box">
+      <div class="preview-title">Report Preview</div>
+      <div class="preview-row"><span class="preview-label">Brand</span><span class="preview-value" id="pv-brand">—</span></div>
+      <div class="preview-row"><span class="preview-label">Period</span><span class="preview-value" id="pv-period">—</span></div>
+      <div class="preview-row"><span class="preview-label">Status</span><span class="preview-value" id="pv-status">—</span></div>
+      <div class="preview-row"><span class="preview-label">Sheets included</span><span class="preview-value">Summary + Videos</span></div>
+    </div>
+
+    <button class="btn-dl" id="dl-btn" disabled onclick="downloadReport()">
+      ↓ Download .xlsx Report
+    </button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const clientsData = {{ clients | tojson }};
+  let selectedClientId = {{ active_client_id | tojson if active_client_id else 'null' }};
+  let selectedPeriodId = null;
+
+  {% if active_client_id and periods %}
+  document.getElementById('period-wrap').style.display = 'block';
+  {% endif %}
+
+  function onBrandChange(val) {
+    selectedClientId = val ? parseInt(val) : null;
+    selectedPeriodId = null;
+    document.getElementById('dl-btn').disabled = true;
+    document.getElementById('preview-box').classList.remove('show');
+
+    if (!val) {
+      document.getElementById('period-wrap').style.display = 'none';
+      return;
+    }
+
+    fetch(`/api/client-periods/${val}`)
+      .then(r => r.json())
+      .then(periods => {
+        const sel = document.getElementById('period-select');
+        sel.innerHTML = '<option value="">— Select a period —</option>';
+        periods.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.dataset.start = p.period_start;
+          opt.dataset.end = p.period_end;
+          opt.dataset.status = p.status;
+          opt.dataset.target = p.target_posts;
+          const label = formatDate(p.period_start) + ' – ' + formatDate(p.period_end);
+          const tag = p.status === 'active' ? ' (Active)' : p.status === 'completed' ? ' (Completed)' : '';
+          opt.textContent = label + tag;
+          sel.appendChild(opt);
+        });
+        document.getElementById('period-wrap').style.display = 'block';
+      });
+  }
+
+  function onPeriodChange(val) {
+    selectedPeriodId = val ? parseInt(val) : null;
+    if (!val) {
+      document.getElementById('preview-box').classList.remove('show');
+      document.getElementById('dl-btn').disabled = true;
+      return;
+    }
+    const opt = document.getElementById('period-select').selectedOptions[0];
+    const brand = document.getElementById('brand-select').selectedOptions[0];
+    document.getElementById('pv-brand').textContent = brand ? brand.textContent.trim() : '—';
+    document.getElementById('pv-period').textContent = formatDate(opt.dataset.start) + ' – ' + formatDate(opt.dataset.end);
+    const statusMap = { active: 'Active', completed: 'Completed', overdue: 'Overdue' };
+    document.getElementById('pv-status').textContent = statusMap[opt.dataset.status] || opt.dataset.status;
+    document.getElementById('preview-box').classList.add('show');
+    document.getElementById('dl-btn').disabled = false;
+  }
+
+  function downloadReport() {
+    if (!selectedClientId || !selectedPeriodId) return;
+    window.location.href = `/reports/download?client=${selectedClientId}&period=${selectedPeriodId}`;
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[parseInt(m)-1] + ' ' + parseInt(d);
+  }
+</script>
+{% endblock %}

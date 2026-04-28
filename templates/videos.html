@@ -93,7 +93,7 @@
 <div class="filter-strip">
   <a href="/videos" class="fchip all {% if not active_client_id and not filter_type %}active{% endif %}">All</a>
   {% for c in clients %}
-  <a href="/videos?client={{ c.id }}" class="fchip {% if active_client_id == c.id %}active{% endif %}">
+  <a href="/videos?client={{ c.id }}" class="fchip {% if active_client_id == c.id and not selected_period %}active{% endif %}">
     <div class="cdot" style="background:{{ c.brand_color }}"></div>{{ c.brand_name }}
   </a>
   {% endfor %}
@@ -102,6 +102,19 @@
   <a href="/videos?filter=unassigned"
      class="fchip {% if filter_type == 'unassigned' %}active{% endif %}">⊘ Unassigned</a>
 </div>
+
+{% if active_client_id and all_periods %}
+<div class="filter-strip" style="padding-top:0;border-bottom:none;background:var(--bg);gap:6px;">
+  <a href="/videos?client={{ active_client_id }}"
+     class="fchip {% if not selected_period %}active{% endif %}" style="font-size:9px;">All Time</a>
+  {% for p in all_periods %}
+  <a href="/videos?client={{ active_client_id }}&period={{ p.id }}"
+     class="fchip {% if selected_period and p.id == selected_period.id %}active{% endif %}" style="font-size:9px;">
+    {{ p.period_start | datefmt }} – {{ p.period_end | datefmt }}{% if p.status == 'active' %} ·&nbsp;Active{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
 
 <div class="table-meta">
   <div class="table-count"><strong>{{ videos | length }}</strong> videos shown</div>

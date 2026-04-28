@@ -135,6 +135,8 @@ def init_db():
         "ALTER TABLE videos ALTER COLUMN client_id DROP NOT NULL",
         "ALTER TABLE products ADD COLUMN IF NOT EXISTS thumbnail_url TEXT",
         "ALTER TABLE video_metrics ADD COLUMN IF NOT EXISTS all_product_ids TEXT",
+        "ALTER TABLE clients ADD COLUMN IF NOT EXISTS share_token TEXT UNIQUE",
+        "ALTER TABLE clients ADD COLUMN IF NOT EXISTS sort_order INTEGER",
     ]
     for sql in migrations:
         try:
@@ -143,6 +145,29 @@ def init_db():
                     cur.execute(sql)
         except Exception:
             pass
+
+    # Back-fill share tokens for existing clients that have none
+    try:
+        import uuid as _uuid
+        rows = fetchall("SELECT id FROM clients WHERE share_token IS NULL")
+        for r in rows:
+            token = _uuid.uuid4().hex + _uuid.uuid4().hex
+            execute("UPDATE clients SET share_token=%s WHERE id=%s", (token, r['id']))
+    except Exception:
+        pass
+
+    # Back-fill sort_order for existing clients
+    try:
+        execute("""
+            UPDATE clients SET sort_order = sub.rn
+            FROM (
+                SELECT id, ROW_NUMBER() OVER (ORDER BY created_at) AS rn
+                FROM clients WHERE sort_order IS NULL
+            ) sub
+            WHERE clients.id = sub.id
+        """)
+    except Exception:
+        pass
 
 
 # ── SETTINGS ─────────────────────────────────────────────────────────────────
@@ -174,7 +199,7 @@ def get_products_info_map():
 # ── CLIENTS ──────────────────────────────────────────────────────────────────
 
 def get_all_clients():
-    return fetchall("SELECT * FROM clients ORDER BY created_at")
+    return fetchall("SELECT * FROM clients ORDER BY COALESCE(sort_order, 9999), created_at")
 
 
 def get_all_clients_with_period_stats():
@@ -199,7 +224,7 @@ def get_all_clients_with_period_stats():
         FROM clients c
         LEFT JOIN retainer_periods rp
                ON rp.client_id = c.id AND rp.status = 'active'
-        ORDER BY c.created_at
+        ORDER BY COALESCE(c.sort_order, 9999), c.created_at
     """)
     today = date.today()
     for r in rows:
@@ -218,10 +243,14 @@ def get_client(client_id):
 
 
 def add_client(brand_name, tiktok_handle, brand_color, post_target):
+    import uuid as _uuid
+    token = _uuid.uuid4().hex + _uuid.uuid4().hex
+    max_order = fetchone("SELECT COALESCE(MAX(sort_order), 0) AS m FROM clients")
+    sort_order = (max_order['m'] or 0) + 1
     return execute(
-        "INSERT INTO clients (brand_name, tiktok_handle, brand_color, post_target) "
-        "VALUES (%s, %s, %s, %s) RETURNING id",
-        (brand_name, tiktok_handle or None, brand_color, post_target)
+        "INSERT INTO clients (brand_name, tiktok_handle, brand_color, post_target, share_token, sort_order) "
+        "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+        (brand_name, tiktok_handle or None, brand_color, post_target, token, sort_order)
     )
 
 
@@ -236,6 +265,22 @@ def delete_client(client_id):
     execute("DELETE FROM clients WHERE id = %s", (client_id,))
 
 
+def get_client_by_token(token):
+    return fetchone("SELECT * FROM clients WHERE share_token = %s", (token,))
+
+
+def regenerate_share_token(client_id):
+    import uuid as _uuid
+    token = _uuid.uuid4().hex + _uuid.uuid4().hex
+    execute("UPDATE clients SET share_token=%s WHERE id=%s", (token, client_id))
+    return token
+
+
+def update_client_sort_orders(ordered_ids):
+    for i, cid in enumerate(ordered_ids, start=1):
+        execute("UPDATE clients SET sort_order=%s WHERE id=%s", (i, cid))
+
+
 # ── RETAINER PERIODS ──────────────────────────────────────────────────────────
 
 def get_active_period(client_id):
@@ -246,6 +291,17 @@ def get_active_period(client_id):
 
 
 def get_period_history(client_id):
+    return fetchall(
+        "SELECT * FROM retainer_periods WHERE client_id=%s ORDER BY period_start DESC",
+        (client_id,)
+    )
+
+
+def get_period(period_id):
+    return fetchone("SELECT * FROM retainer_periods WHERE id=%s", (period_id,))
+
+
+def get_all_periods_for_client(client_id):
     return fetchall(
         "SELECT * FROM retainer_periods WHERE client_id=%s ORDER BY period_start DESC",
         (client_id,)
@@ -361,9 +417,15 @@ def get_product_videos(product_id_str, limit=6):
 
 # ── VIDEOS ────────────────────────────────────────────────────────────────────
 
-def get_client_videos(client_id, filter_type=None, limit=30):
+def get_client_videos(client_id, filter_type=None, limit=30, period_start=None, period_end=None):
     where = "WHERE v.client_id = %s"
     params = [client_id]
+    if period_start:
+        where += " AND v.posted_at >= %s::date"
+        params.append(period_start)
+    if period_end:
+        where += " AND v.posted_at <= (%s::date + interval '1 day')"
+        params.append(period_end)
     if filter_type == 'tagged':
         where += " AND vm.tagged_product_id IS NOT NULL"
     elif filter_type == 'untagged':
@@ -383,7 +445,7 @@ def get_client_videos(client_id, filter_type=None, limit=30):
     """, params + [limit])
 
 
-def get_all_videos(client_id=None, filter_type=None, limit=100):
+def get_all_videos(client_id=None, filter_type=None, limit=100, period_start=None, period_end=None):
     where_clauses = []
     params = []
     if filter_type == 'unassigned':
@@ -391,6 +453,12 @@ def get_all_videos(client_id=None, filter_type=None, limit=100):
     elif client_id:
         where_clauses.append("v.client_id = %s")
         params.append(client_id)
+    if period_start:
+        where_clauses.append("v.posted_at >= %s::date")
+        params.append(period_start)
+    if period_end:
+        where_clauses.append("v.posted_at <= (%s::date + interval '1 day')")
+        params.append(period_end)
     if filter_type == 'tagged':
         where_clauses.append("vm.tagged_product_id IS NOT NULL")
     elif filter_type == 'untagged':
@@ -480,6 +548,40 @@ def get_recent_activity(client_id, limit=8):
 
 def assign_video_to_client(video_id, client_id):
     execute("UPDATE videos SET client_id=%s WHERE video_id=%s", (client_id, video_id))
+
+
+def get_report_summary(client_id, period_start, period_end):
+    return fetchone("""
+        SELECT
+            COUNT(DISTINCT v.id)                                                            AS video_count,
+            COUNT(DISTINCT CASE WHEN vm.tagged_product_id IS NOT NULL THEN v.id END)        AS tagged_count,
+            COALESCE(SUM(vm.views), 0)                                                      AS total_views,
+            COALESCE(SUM(vm.likes), 0)                                                      AS total_likes,
+            COALESCE(SUM(vm.comments), 0)                                                   AS total_comments,
+            COALESCE(SUM(vm.gmv), 0)                                                        AS total_gmv,
+            COALESCE(SUM(vm.orders), 0)                                                     AS total_orders
+        FROM videos v
+        LEFT JOIN video_metrics vm ON vm.video_id = v.video_id
+        WHERE v.client_id = %s
+          AND v.posted_at >= %s::date
+          AND v.posted_at <= (%s::date + interval '1 day')
+    """, (client_id, period_start, period_end))
+
+
+def get_report_videos(client_id, period_start, period_end):
+    return fetchall("""
+        SELECT
+            v.video_id, v.description, v.posted_at, v.duration,
+            vm.views, vm.likes, vm.comments, vm.gmv, vm.orders,
+            p.product_name, vm.tagged_product_id
+        FROM videos v
+        LEFT JOIN video_metrics vm ON vm.video_id = v.video_id
+        LEFT JOIN products p ON p.product_id = vm.tagged_product_id AND p.client_id = v.client_id
+        WHERE v.client_id = %s
+          AND v.posted_at >= %s::date
+          AND v.posted_at <= (%s::date + interval '1 day')
+        ORDER BY v.posted_at DESC NULLS LAST
+    """, (client_id, period_start, period_end))
 
 
 def get_tagged_videos_for_gmv():

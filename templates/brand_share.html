@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ client.brand_name }} — Trakr Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg:       #F6F6F6;
+    --surface:  #ffffff;
+    --surface2: #FAFAFA;
+    --border:   #F2F2F2;
+    --border2:  #F5F5F5;
+    --text:     #111111;
+    --muted:    #AAAAAA;
+    --muted2:   #CCCCCC;
+    --muted3:   #E4E4E4;
+    --accent:   #3DDC84;
+    --accent-g: linear-gradient(90deg, #3DDC84, #C8F97F);
+    --accent2:  #F97066;
+    --amber:    #F5A623;
+    --brand:    {{ client.brand_color }};
+    --shadow:   0 1px 8px rgba(0,0,0,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; min-height: 100vh; }
+  a { text-decoration: none; color: inherit; }
+
+  .share-header {
+    background: #111;
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .share-logo { font-weight: 800; font-size: 14px; letter-spacing: 0.12em; color: #fff; text-transform: uppercase; }
+  .share-logo span { color: var(--accent); }
+  .share-brand-badge {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.08); border-radius: 20px;
+    padding: 5px 12px 5px 8px;
+  }
+  .share-brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); }
+  .share-brand-name { font-size: 11px; font-weight: 700; color: #fff; }
+
+  .brand-hero {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 20px 16px;
+  }
+  .brand-hero-name { font-size: 22px; font-weight: 800; color: var(--text); }
+  .brand-hero-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .period-strip {
+    display: flex; gap: 6px;
+    padding: 12px 20px; overflow-x: auto; scrollbar-width: none;
+    background: var(--surface); border-bottom: 1px solid var(--border2);
+  }
+  .period-strip::-webkit-scrollbar { display: none; }
+  .period-chip {
+    padding: 5px 13px; border-radius: 20px;
+    font-size: 10px; font-weight: 600; white-space: nowrap;
+    border: 1px solid var(--muted3); color: var(--muted);
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .period-chip.active { background: #111; color: var(--accent); border-color: #111; }
+
+  .stats-grid { display: flex; gap: 10px; padding: 16px 20px; overflow-x: auto; scrollbar-width: none; }
+  .stats-grid::-webkit-scrollbar { display: none; }
+  .stat-card { background: var(--surface); box-shadow: var(--shadow); border-radius: 14px; padding: 14px 16px; min-width: 120px; flex-shrink: 0; }
+  .stat-card.wide { min-width: 140px; }
+  .stat-label { font-size: 9px; font-weight: 700; color: var(--muted); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-weight: 700; font-size: 22px; color: var(--text); line-height: 1; }
+  .stat-value.green { color: var(--accent); }
+  .stat-delta { font-size: 9px; font-weight: 600; color: var(--muted); margin-top: 5px; }
+
+  .progress-block { margin: 0 20px 16px; background: var(--surface); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow); }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .progress-label { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .progress-count { font-size: 13px; font-weight: 700; color: var(--brand); }
+  .progress-bar-wrap { height: 6px; background: var(--muted3); border-radius: 99px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 99px; background: var(--brand); transition: width 0.7s ease; }
+  .progress-meta { font-size: 10px; color: var(--muted); margin-top: 7px; }
+
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); padding: 0 20px 10px; }
+
+  .video-list { display: flex; flex-direction: column; gap: 10px; padding: 0 20px 28px; }
+  .video-card { background: var(--surface); box-shadow: var(--shadow); border-radius: 16px; overflow: hidden; }
+  .video-top { display: flex; gap: 10px; padding: 12px 12px 10px; align-items: flex-start; }
+  .video-thumb { width: 52px; height: 68px; border-radius: 10px; flex-shrink: 0; overflow: hidden; position: relative; background: var(--muted3); }
+  .video-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-duration { position: absolute; bottom: 3px; right: 3px; background: rgba(0,0,0,0.72); color: #fff; font-size: 8px; padding: 1px 4px; border-radius: 3px; font-weight: 600; }
+  .thumb-fallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .video-right { flex: 1; min-width: 0; }
+  .video-desc { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .video-meta-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .video-date { font-size: 10px; font-weight: 500; color: var(--muted); }
+  .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+  .status-badge.live { background: #F0FBE0; color: var(--accent); }
+  .status-badge.notag { background: #FFF1F0; color: var(--accent2); }
+  .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .dot.live { background: var(--accent); }
+  .dot.notag { background: var(--muted2); }
+  .video-metrics { display: flex; border-top: 1px solid var(--border2); }
+  .metric-box { flex: 1; padding: 8px; border-right: 1px solid var(--border2); text-align: center; }
+  .metric-box:last-child { border-right: none; }
+  .metric-label { font-size: 8px; font-weight: 700; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
+  .metric-val { font-weight: 700; font-size: 14px; color: var(--text); }
+  .metric-val.green { color: var(--accent); }
+  .metric-sub { font-size: 9px; color: var(--muted); margin-top: 1px; }
+  .product-row { display: flex; align-items: center; gap: 6px; padding: 8px 12px; flex-wrap: wrap; }
+  .product-chip { display: flex; align-items: center; gap: 5px; background: var(--surface2); border-radius: 8px; padding: 4px 8px 4px 4px; }
+  .product-chip-img { width: 24px; height: 24px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
+  .product-chip-icon { width: 24px; height: 24px; border-radius: 5px; background: var(--muted3); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  .product-chip-name { font-size: 10px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+  .gmv-pill { font-weight: 700; font-size: 12px; color: var(--accent); white-space: nowrap; flex-shrink: 0; margin-left: auto; }
+  .no-product-label { font-size: 9px; font-weight: 600; color: var(--muted); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 12px; }
+
+  .share-footer { text-align: center; padding: 20px; font-size: 10px; color: var(--muted2); }
+
+  @media (min-width: 768px) {
+    .stats-grid .stat-card { flex: 1; min-width: 0; }
+    .brand-hero { padding: 24px 32px 18px; }
+    .period-strip { padding: 12px 32px; }
+    .stats-grid { padding: 16px 32px; }
+    .progress-block { margin: 0 32px 16px; }
+    .section-label { padding: 0 32px 10px; }
+    .video-list { padding: 0 32px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="share-header">
+  <div class="share-logo">TR<span>A</span>KR</div>
+  <div class="share-brand-badge">
+    <div class="share-brand-dot"></div>
+    <div class="share-brand-name">{{ client.brand_name }}</div>
+  </div>
+</div>
+
+<div class="brand-hero">
+  <div class="brand-hero-name">{{ client.brand_name }}</div>
+  <div class="brand-hero-sub">
+    {% if selected_period %}
+      Period: {{ selected_period.period_start | datefmt }} – {{ selected_period.period_end | datefmt }}
+      {% if selected_period.status == 'active' %} · <span style="color:var(--accent);font-weight:700;">Active</span>{% elif selected_period.status == 'completed' %} · Completed{% endif %}
+    {% else %}
+      No period selected
+    {% endif %}
+  </div>
+</div>
+
+{% if all_periods | length > 1 %}
+<div class="period-strip">
+  {% for p in all_periods %}
+  <a href="/brand/{{ token }}?period={{ p.id }}"
+     class="period-chip {% if selected_period and p.id == selected_period.id %}active{% endif %}">
+    {{ p.period_start | datefmt }} – {{ p.period_end | datefmt }}
+    {% if p.status == 'active' %} ·&nbsp;Active{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- STATS -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Videos</div>
+    <div class="stat-value">{{ stats.video_count or 0 }}</div>
+    <div class="stat-delta">this period</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Tagged</div>
+    <div class="stat-value">{{ stats.tagged_count or 0 }}</div>
+    <div class="stat-delta">
+      {% if stats.video_count and stats.video_count > 0 %}
+        {{ ((stats.tagged_count or 0) / stats.video_count * 100) | round | int }}% of videos
+      {% else %}—{% endif %}
+    </div>
+  </div>
+  <div class="stat-card wide">
+    <div class="stat-label">Total Views</div>
+    <div class="stat-value">{{ stats.total_views | num }}</div>
+    <div class="stat-delta">all videos</div>
+  </div>
+  <div class="stat-card wide">
+    <div class="stat-label">Est. GMV</div>
+    <div class="stat-value green">{{ stats.total_gmv | gmv }}</div>
+    <div class="stat-delta">tagged videos</div>
+  </div>
+</div>
+
+{% if selected_period %}
+{% set target = selected_period.target_posts or client.post_target or 30 %}
+{% set done = stats.video_count or 0 %}
+{% set pct = [[done / target * 100, 100] | min, 0] | max %}
+<div class="progress-block">
+  <div class="progress-header">
+    <div class="progress-label">Retainer Progress</div>
+    <div class="progress-count">{{ done }}<span style="font-weight:400;color:var(--muted);font-size:11px;">/{{ target }}</span></div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" style="width:{{ pct | round(1) }}%;"></div>
+  </div>
+  <div class="progress-meta">
+    {{ pct | round(1) }}% complete
+    {% if selected_period.status == 'active' %}
+      {% set days_left = (selected_period.period_end - today).days %}
+      · {% if days_left <= 3 %}<span style="color:#ff4444;">{{ days_left }}d remaining ⚠</span>{% else %}<span style="color:var(--brand);">{{ days_left }}d remaining</span>{% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="section-label">Videos This Period</div>
+
+<div class="video-list">
+  {% if videos %}
+    {% for v in videos %}
+    <div class="video-card">
+      <a href="https://www.tiktok.com/@{{ creator_handle }}/video/{{ v.video_id }}"
+         target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;">
+        <div class="video-top">
+          <div class="video-thumb">
+            {% if v.cover_url %}
+            <img src="{{ v.cover_url }}" alt="thumb"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="thumb-fallback" style="display:none">🎬</div>
+            {% else %}
+            <div class="thumb-fallback">🎬</div>
+            {% endif %}
+            {% if v.duration %}
+            <div class="thumb-duration">{{ v.duration | duration }}</div>
+            {% endif %}
+          </div>
+          <div class="video-right">
+            <div class="video-desc">{{ v.description or '(no description)' }}</div>
+            <div class="video-meta-row">
+              <div class="video-date">{{ v.posted_at | datefmt }}</div>
+              {% if v.tagged_product_id %}
+              <div class="status-badge live"><div class="dot live"></div>Live</div>
+              {% else %}
+              <div class="status-badge notag"><div class="dot notag"></div>No Tag</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </a>
+      <div class="video-metrics">
+        <div class="metric-box">
+          <div class="metric-label">Views</div>
+          <div class="metric-val">{{ v.views | num }}</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Likes</div>
+          <div class="metric-val">{{ v.likes | num }}</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">GMV</div>
+          {% if v.gmv %}
+          <div class="metric-val green">{{ v.gmv | gmv }}</div>
+          <div class="metric-sub">{{ v.orders or 0 }} orders</div>
+          {% else %}
+          <div class="metric-val" style="color:var(--muted)">—</div>
+          <div class="metric-sub">unmonetized</div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="product-row">
+        {% set all_pids = (v.all_product_ids | fromjson) if v.all_product_ids else ([v.tagged_product_id] if v.tagged_product_id else []) %}
+        {% if all_pids %}
+          {% for pid in all_pids %}
+          {% set pinfo = products_info.get(pid, {}) %}
+          <div class="product-chip">
+            {% if pinfo.get('thumbnail_url') %}
+            <img src="{{ pinfo.thumbnail_url }}" class="product-chip-img" alt=""
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+            <div class="product-chip-icon" style="display:none">📦</div>
+            {% else %}
+            <div class="product-chip-icon">📦</div>
+            {% endif %}
+            <div class="product-chip-name">{{ pinfo.get('product_name') or ('Product …' + pid[-6:]) }}</div>
+          </div>
+          {% endfor %}
+          {% if v.gmv %}
+          <div class="gmv-pill">{{ v.gmv | gmv }}</div>
+          {% endif %}
+        {% else %}
+        <div class="no-product-label">No product tagged</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state">No videos posted this period yet.</div>
+  {% endif %}
+</div>
+
+<div class="share-footer">Powered by Trakr</div>
+
+</body>
+</html>
