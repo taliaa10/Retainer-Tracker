@@ -113,10 +113,12 @@ def dashboard():
     active_period = db.get_active_period(active['id'])
     all_periods = db.get_all_periods_for_client(active['id'])
 
+    # period=0 means explicitly "all time"; no param means default to active period
+    period_in_url = 'period' in request.args
     selected_period = None
-    if period_id:
+    if period_in_url and period_id:
         selected_period = next((p for p in all_periods if p['id'] == period_id), None)
-    if not selected_period:
+    elif not period_in_url:
         selected_period = active_period
 
     period_start = selected_period.get('period_start') if selected_period else None
@@ -318,6 +320,12 @@ def update_period(period_id):
 @app.route('/settings/periods/<int:period_id>/complete', methods=['POST'])
 def complete_period(period_id):
     db.complete_period(period_id)
+    return redirect(url_for('settings'))
+
+
+@app.route('/settings/periods/<int:period_id>/delete', methods=['POST'])
+def delete_period(period_id):
+    db.delete_period(period_id)
     return redirect(url_for('settings'))
 
 

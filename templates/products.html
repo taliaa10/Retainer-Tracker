@@ -106,7 +106,12 @@
     {% for p in products %}
     <div class="product-card" style="border-left-color:{{ p.brand_color }};animation-delay:{{ loop.index0 * 0.04 }}s;">
       <div class="product-top">
-        <div class="product-img">📦</div>
+        <div class="product-img">
+          {% if p.thumbnail_url %}
+          <img src="{{ p.thumbnail_url }}" alt=""
+               onerror="this.style.display='none';this.parentElement.textContent='📦'"/>
+          {% else %}📦{% endif %}
+        </div>
         <div class="product-right">
           <div class="product-name-row">
             <div class="product-name">{{ p.product_name or p.product_id }}</div>

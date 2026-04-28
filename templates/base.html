@@ -6,6 +6,11 @@
 <title>{% block title %}Trakr{% endblock %}</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111111'/%3E%3Ctext x='32' y='47' font-family='Arial Black,Arial,sans-serif' font-weight='900' font-size='38' fill='%233DDC84' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111111'/%3E%3Ctext x='32' y='47' font-family='Arial Black,Arial,sans-serif' font-weight='900' font-size='38' fill='%233DDC84' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
+{% if page != 'dashboard' %}<link rel="prefetch" href="/">{% endif %}
+{% if page != 'videos' %}<link rel="prefetch" href="/videos">{% endif %}
+{% if page != 'products' %}<link rel="prefetch" href="/products">{% endif %}
+{% if page != 'reports' %}<link rel="prefetch" href="/reports">{% endif %}
+{% if page != 'settings' %}<link rel="prefetch" href="/settings">{% endif %}
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
@@ -197,5 +202,16 @@
 </div>
 
 {% block scripts %}{% endblock %}
+<script>
+// Instant nav highlight on click so the UI responds before the server replies
+document.querySelectorAll('.nav-btn, .sidebar-item').forEach(el => {
+  el.addEventListener('click', function() {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+    const href = this.getAttribute('href');
+    document.querySelectorAll(`[href="${href}"]`).forEach(b => b.classList.add('active'));
+  });
+});
+</script>
 </body>
 </html>

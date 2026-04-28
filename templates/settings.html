@@ -226,7 +226,13 @@
             {% for period in cd.period_history %}
             <div class="history-item">
               <span>{{ period.period_start | datefmt }} – {{ period.period_end | datefmt }}</span>
-              <span class="history-badge {{ period.status }}">{{ period.status }}</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="history-badge {{ period.status }}">{{ period.status }}</span>
+                <form method="POST" action="/settings/periods/{{ period.id }}/delete"
+                      onsubmit="return confirm('Delete this period? This won\'t delete any videos.')">
+                  <button type="submit" class="btn btn-danger" style="padding:2px 7px;font-size:9px;line-height:1.4;" title="Delete period">✕</button>
+                </form>
+              </div>
             </div>
             {% endfor %}
           </div>

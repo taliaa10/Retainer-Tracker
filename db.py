@@ -336,6 +336,10 @@ def complete_period(period_id):
     )
 
 
+def delete_period(period_id):
+    execute("DELETE FROM retainer_periods WHERE id=%s", (period_id,))
+
+
 # ── PRODUCTS ──────────────────────────────────────────────────────────────────
 
 def get_client_products(client_id):
@@ -514,7 +518,7 @@ def get_client_stats(client_id, period_start=None):
 def get_top_products(client_id, limit=5):
     return fetchall("""
         SELECT
-            p.product_id, p.product_name,
+            p.product_id, p.product_name, p.thumbnail_url,
             COUNT(vm.video_id)   AS video_count,
             SUM(vm.orders)       AS total_orders,
             SUM(vm.gmv)          AS total_gmv
