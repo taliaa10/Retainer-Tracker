@@ -640,6 +640,11 @@ def upsert_video_metrics(video_id, views, likes, comments, tagged_product_id, al
     """, (video_id, views, likes, comments, tagged_product_id, all_pids_json))
 
 
+def get_last_sync():
+    """Return the timestamp of the most recent successful sync."""
+    return fetchone("SELECT MAX(synced_at) AS synced_at FROM sync_log WHERE status = 'success'")
+
+
 def log_sync(client_id, status, videos_fetched=0):
     execute(
         "INSERT INTO sync_log (client_id, status, videos_fetched) VALUES (%s, %s, %s)",

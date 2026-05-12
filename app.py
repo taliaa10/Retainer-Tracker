@@ -141,6 +141,14 @@ def dashboard():
     creator_handle = db.get_setting('creator_handle', '')
     today = date.today()
 
+    last_sync_row = db.get_last_sync()
+    last_sync_ts = None
+    if last_sync_row and last_sync_row['synced_at']:
+        dt = last_sync_row['synced_at']
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        last_sync_ts = dt.strftime('%-m/%-d %-I:%M %p').lower()
+
     return render_template(
         'dashboard.html',
         clients=clients,
@@ -156,6 +164,7 @@ def dashboard():
         filter_type=filter_type,
         products_info=products_info,
         creator_handle=creator_handle,
+        last_sync_ts=last_sync_ts,
     )
 
 
