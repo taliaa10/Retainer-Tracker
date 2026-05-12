@@ -4,6 +4,9 @@ import logging
 import threading
 import uuid as _uuid_mod
 from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
+
+_CENTRAL = ZoneInfo('America/Chicago')
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, abort
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -147,6 +150,7 @@ def dashboard():
         dt = last_sync_row['synced_at']
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.astimezone(_CENTRAL)
         last_sync_ts = dt.strftime('%-m/%-d %-I:%M %p').lower()
 
     return render_template(
