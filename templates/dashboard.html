@@ -443,12 +443,27 @@
 
 {% block scripts %}
 <script>
+function _pollJob(jobId, pollInterval) {
+  setTimeout(function poll() {
+    fetch('/api/sync/status/' + jobId)
+      .then(r => r.json())
+      .then(d => {
+        if (d.status === 'running') {
+          setTimeout(poll, pollInterval);
+        } else {
+          location.reload();
+        }
+      })
+      .catch(() => location.reload());
+  }, pollInterval);
+}
+
 function syncAll(btn) {
   btn.textContent = '↺ Syncing…';
   btn.disabled = true;
   fetch('/api/sync', { method: 'POST' })
     .then(r => r.json())
-    .then(d => { location.reload(); })
+    .then(d => _pollJob(d.job_id, 2000))
     .catch(() => { btn.textContent = '↺ Sync'; btn.disabled = false; });
 }
 
@@ -457,16 +472,16 @@ function syncGMV(btn) {
   btn.disabled = true;
   fetch('/api/sync/gmv', { method: 'POST' })
     .then(r => r.json())
-    .then(d => { location.reload(); })
+    .then(d => _pollJob(d.job_id, 2000))
     .catch(() => { btn.textContent = '$ GMV'; btn.disabled = false; });
 }
 
 function syncClient(clientId, btn) {
   btn.textContent = '↺ Syncing…';
   btn.disabled = true;
-  fetch(`/api/sync/${clientId}`, { method: 'POST' })
+  fetch('/api/sync/' + clientId, { method: 'POST' })
     .then(r => r.json())
-    .then(d => { location.reload(); })
+    .then(d => _pollJob(d.job_id, 2000))
     .catch(() => { btn.textContent = '↺ Sync Now'; btn.disabled = false; });
 }
 

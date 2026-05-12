@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 import db
@@ -23,13 +24,42 @@ def sync_creator():
     total_fetched = 0
     max_cursor = None
 
+    def _fetch_detail(video_id):
+        try:
+            detail = tikhub.fetch_video_detail(video_id)
+            pid = tikhub.parse_video_detail(detail)
+            return video_id, pid
+        except Exception as e:
+            logger.warning(f"Could not fetch detail for {video_id}: {e}")
+            return video_id, None
+
     try:
         while True:
-            raw = tikhub.fetch_user_videos(handle, count=30, max_cursor=max_cursor)
+            raw = tikhub.fetch_user_videos(handle, count=50, max_cursor=max_cursor)
             videos = tikhub.parse_videos(raw)
 
             if not videos:
                 break
+
+            # One DB query for the whole page instead of one per video
+            page_video_ids = [v["video_id"] for v in videos]
+            existing_ids = db.get_existing_video_ids(page_video_ids)
+
+            # Fetch detail for new untagged videos concurrently (HTTP only, no DB)
+            needs_detail = [
+                v for v in videos
+                if not v["all_product_ids"] and v["video_id"] not in existing_ids
+            ]
+            detail_results = {}
+            if needs_detail:
+                with ThreadPoolExecutor(max_workers=3) as pool:
+                    futures = {pool.submit(_fetch_detail, v["video_id"]): v for v in needs_detail}
+                    for future in as_completed(futures):
+                        vid_id, pid = future.result()
+                        detail_results[vid_id] = pid
+
+            video_rows = []
+            metrics_rows = []
 
             for v in videos:
                 posted_at = None
@@ -41,18 +71,12 @@ def sync_creator():
                     except (ValueError, OSError):
                         pass
 
-                all_pids = v["all_product_ids"]
+                all_pids = list(v["all_product_ids"])
 
-                # For new videos with no product tags, try fetching video detail
-                if not all_pids and not db.video_exists(v["video_id"]):
-                    try:
-                        detail = tikhub.fetch_video_detail(v["video_id"])
-                        pid = tikhub.parse_video_detail(detail)
-                        if pid:
-                            all_pids = [pid]
-                        time.sleep(0.3)
-                    except Exception as e:
-                        logger.warning(f"Could not fetch detail for {v['video_id']}: {e}")
+                if v["video_id"] in detail_results and not all_pids:
+                    pid = detail_results[v["video_id"]]
+                    if pid:
+                        all_pids = [pid]
 
                 # Pick first product ID that matches a registered client
                 tagged_product_id = None
@@ -66,22 +90,26 @@ def sync_creator():
                 if not tagged_product_id and all_pids:
                     tagged_product_id = all_pids[0]
 
-                db.upsert_video(
-                    client_id=client_id,
-                    video_id=v["video_id"],
-                    description=v["description"],
-                    cover_url=v["cover_url"],
-                    duration=v["duration"],
-                    posted_at=posted_at,
-                )
-                db.upsert_video_metrics(
-                    video_id=v["video_id"],
-                    views=v["views"],
-                    likes=v["likes"],
-                    comments=v["comments"],
-                    tagged_product_id=tagged_product_id,
-                    all_product_ids=all_pids or None,
-                )
+                video_rows.append({
+                    'client_id': client_id,
+                    'video_id': v["video_id"],
+                    'description': v["description"],
+                    'cover_url': v["cover_url"],
+                    'duration': v["duration"],
+                    'posted_at': posted_at,
+                })
+                metrics_rows.append({
+                    'video_id': v["video_id"],
+                    'views': v["views"],
+                    'likes': v["likes"],
+                    'comments': v["comments"],
+                    'tagged_product_id': tagged_product_id,
+                    'all_product_ids': all_pids or None,
+                })
+
+            # Two DB calls for the whole page instead of 2N
+            db.batch_upsert_videos(video_rows)
+            db.batch_upsert_video_metrics(metrics_rows)
 
             total_fetched += len(videos)
 

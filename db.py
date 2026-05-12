@@ -137,6 +137,7 @@ def init_db():
         "ALTER TABLE video_metrics ADD COLUMN IF NOT EXISTS all_product_ids TEXT",
         "ALTER TABLE clients ADD COLUMN IF NOT EXISTS share_token TEXT UNIQUE",
         "ALTER TABLE clients ADD COLUMN IF NOT EXISTS sort_order INTEGER",
+        "ALTER TABLE video_metrics ADD COLUMN IF NOT EXISTS gmv_synced_at TIMESTAMPTZ",
     ]
     for sql in migrations:
         try:
@@ -588,20 +589,24 @@ def get_report_videos(client_id, period_start, period_end):
     """, (client_id, period_start, period_end))
 
 
-def get_tagged_videos_for_gmv():
-    """Return all videos that have a product tag, for GMV enrichment."""
+def get_tagged_videos_for_gmv(max_age_hours=24):
+    """Return tagged videos whose GMV data is older than max_age_hours, or never synced."""
     return fetchall("""
         SELECT v.video_id, vm.tagged_product_id, v.posted_at
         FROM videos v
         JOIN video_metrics vm ON vm.video_id = v.video_id
         WHERE vm.tagged_product_id IS NOT NULL
+          AND (
+              vm.gmv_synced_at IS NULL
+              OR vm.gmv_synced_at < NOW() - make_interval(hours => %s)
+          )
         ORDER BY v.posted_at DESC
-    """)
+    """, (max_age_hours,))
 
 
 def update_video_gmv(video_id, gmv, orders):
     execute(
-        "UPDATE video_metrics SET gmv=%s, orders=%s WHERE video_id=%s",
+        "UPDATE video_metrics SET gmv=%s, orders=%s, gmv_synced_at=NOW() WHERE video_id=%s",
         (gmv, orders, video_id)
     )
 
@@ -645,3 +650,69 @@ def log_sync(client_id, status, videos_fetched=0):
 def video_exists(video_id):
     row = fetchone("SELECT 1 FROM videos WHERE video_id=%s", (video_id,))
     return row is not None
+
+
+def get_existing_video_ids(video_ids):
+    """Return the subset of video_ids that already exist in the DB (single query)."""
+    if not video_ids:
+        return set()
+    rows = fetchall(
+        "SELECT video_id FROM videos WHERE video_id = ANY(%s)",
+        (list(video_ids),)
+    )
+    return {r['video_id'] for r in rows}
+
+
+def batch_upsert_videos(rows):
+    """Upsert a list of video dicts in a single statement.
+
+    Each dict must have: client_id, video_id, description, cover_url, duration, posted_at
+    """
+    if not rows:
+        return
+    data = [
+        (r['client_id'], r['video_id'], r['description'],
+         r['cover_url'], r['duration'], r['posted_at'])
+        for r in rows
+    ]
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            psycopg2.extras.execute_values(cur, """
+                INSERT INTO videos
+                    (client_id, video_id, description, cover_url, duration, posted_at, synced_at)
+                VALUES %s
+                ON CONFLICT (video_id) DO UPDATE SET
+                    client_id = COALESCE(EXCLUDED.client_id, videos.client_id),
+                    cover_url = EXCLUDED.cover_url,
+                    synced_at = NOW()
+            """, data)
+
+
+def batch_upsert_video_metrics(rows):
+    """Upsert a list of video-metrics dicts in a single statement.
+
+    Each dict must have: video_id, views, likes, comments, tagged_product_id, all_product_ids
+    """
+    import json as _json
+    if not rows:
+        return
+    data = [
+        (r['video_id'], r['views'], r['likes'], r['comments'],
+         r['tagged_product_id'],
+         _json.dumps(r['all_product_ids']) if r['all_product_ids'] else None)
+        for r in rows
+    ]
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            psycopg2.extras.execute_values(cur, """
+                INSERT INTO video_metrics
+                    (video_id, views, likes, comments, tagged_product_id, all_product_ids, recorded_at)
+                VALUES %s
+                ON CONFLICT (video_id) DO UPDATE SET
+                    views             = EXCLUDED.views,
+                    likes             = EXCLUDED.likes,
+                    comments          = EXCLUDED.comments,
+                    tagged_product_id = COALESCE(EXCLUDED.tagged_product_id, video_metrics.tagged_product_id),
+                    all_product_ids   = COALESCE(EXCLUDED.all_product_ids, video_metrics.all_product_ids),
+                    recorded_at       = NOW()
+            """, data)

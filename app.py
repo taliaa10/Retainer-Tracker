@@ -1,6 +1,8 @@
 import os
 import io
 import logging
+import threading
+import uuid as _uuid_mod
 from datetime import date, datetime, timezone
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file, abort
@@ -540,31 +542,61 @@ def brand_share(token):
 
 # ── SYNC API ──────────────────────────────────────────────────────────────────
 
+_JOBS = {}
+_JOBS_LOCK = threading.Lock()
+_SYNC_LOCK = threading.Lock()
+
+
+def _run_sync_job(job_id, fn):
+    acquired = _SYNC_LOCK.acquire(blocking=False)
+    if not acquired:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {'status': 'error', 'result': None, 'message': 'sync already in progress'}
+        return
+    try:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {'status': 'running', 'result': None, 'message': None}
+        result = fn()
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {'status': 'done', 'result': result, 'message': None}
+    except Exception as e:
+        with _JOBS_LOCK:
+            _JOBS[job_id] = {'status': 'error', 'result': None, 'message': str(e)}
+    finally:
+        _SYNC_LOCK.release()
+
+
 @app.route('/api/sync', methods=['POST'])
 def trigger_sync_all():
-    try:
-        count = sync.sync_creator()
-        return jsonify({'status': 'ok', 'videos_fetched': count})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    job_id = _uuid_mod.uuid4().hex
+    t = threading.Thread(target=_run_sync_job, args=(job_id, sync.sync_creator), daemon=True)
+    t.start()
+    return jsonify({'status': 'started', 'job_id': job_id})
 
 
 @app.route('/api/sync/<int:client_id>', methods=['POST'])
 def trigger_sync_client(client_id):
-    try:
-        count = sync.sync_creator()
-        return jsonify({'status': 'ok', 'videos_fetched': count})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    job_id = _uuid_mod.uuid4().hex
+    t = threading.Thread(target=_run_sync_job, args=(job_id, sync.sync_creator), daemon=True)
+    t.start()
+    return jsonify({'status': 'started', 'job_id': job_id})
 
 
 @app.route('/api/sync/gmv', methods=['POST'])
 def trigger_sync_gmv():
-    try:
-        count = sync.sync_gmv()
-        return jsonify({'status': 'ok', 'videos_enriched': count})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+    job_id = _uuid_mod.uuid4().hex
+    t = threading.Thread(target=_run_sync_job, args=(job_id, sync.sync_gmv), daemon=True)
+    t.start()
+    return jsonify({'status': 'started', 'job_id': job_id})
+
+
+@app.route('/api/sync/status/<job_id>')
+def sync_job_status(job_id):
+    with _JOBS_LOCK:
+        job = _JOBS.get(job_id)
+    if not job:
+        return jsonify({'status': 'unknown'}), 404
+    return jsonify(job)
 
 
 @app.route('/api/client-periods/<int:client_id>')
