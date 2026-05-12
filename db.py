@@ -690,7 +690,7 @@ def batch_upsert_videos(rows):
                     client_id = COALESCE(EXCLUDED.client_id, videos.client_id),
                     cover_url = EXCLUDED.cover_url,
                     synced_at = NOW()
-            """, data)
+            """, data, template="(%s, %s, %s, %s, %s, %s, NOW())")
 
 
 def batch_upsert_video_metrics(rows):
@@ -720,4 +720,4 @@ def batch_upsert_video_metrics(rows):
                     tagged_product_id = COALESCE(EXCLUDED.tagged_product_id, video_metrics.tagged_product_id),
                     all_product_ids   = COALESCE(EXCLUDED.all_product_ids, video_metrics.all_product_ids),
                     recorded_at       = NOW()
-            """, data)
+            """, data, template="(%s, %s, %s, %s, %s, %s, NOW())")
