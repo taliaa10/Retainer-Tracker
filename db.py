@@ -11,7 +11,15 @@ _pool = None
 
 def init_pool():
     global _pool
-    _pool = ThreadedConnectionPool(1, 5, DATABASE_URL, sslmode='require')
+    _pool = ThreadedConnectionPool(
+        1, 5, DATABASE_URL,
+        sslmode='require',
+        keepalives=1,
+        keepalives_idle=60,
+        keepalives_interval=10,
+        keepalives_count=5,
+        connect_timeout=10,
+    )
 
 
 @contextmanager
@@ -21,10 +29,14 @@ def get_conn():
         yield conn
         conn.commit()
     except Exception:
-        conn.rollback()
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         raise
     finally:
-        _pool.putconn(conn)
+        # If the connection is broken, close it so the pool creates a fresh one next time
+        _pool.putconn(conn, close=conn.closed != 0)
 
 
 def fetchall(sql, params=None):
